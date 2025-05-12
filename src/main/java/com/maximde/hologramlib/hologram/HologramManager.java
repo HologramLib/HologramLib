@@ -78,9 +78,8 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location) {
-        BukkitTasks.runTask(() -> {
-            hologram.getInternalAccess().spawn(location).update();
-        });
+        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location).update());
+
         this.register(hologram);
         return hologram;
     }
@@ -97,11 +96,7 @@ public class HologramManager {
     }
 
     public void attach(Hologram<?> hologram, int entityID) {
-        this.attach(hologram, entityID, true);
-    }
-
-    public void attach(Hologram<?> hologram, int entityID, boolean persistent) {
-        hologram.attach(entityID, persistent);
+        hologram.attach(entityID);
     }
 
     public <H extends Hologram<H>> boolean register(H hologram) {
