@@ -15,10 +15,10 @@ import me.tofaa.entitylib.meta.EntityMeta;
 import me.tofaa.entitylib.wrapper.WrapperEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -39,7 +39,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     protected boolean dead = true;
 
     @Getter @Accessors(chain = true)
-    protected long updateTaskPeriod = 20L * 1;
+    protected long updateTaskPeriod = 20L;
 
 
     @Getter @Accessors(chain = true)
@@ -88,17 +88,17 @@ public abstract class Hologram<T extends Hologram<T>> {
     @Getter
     protected TaskHandle task;
 
-    @Getter
     /**
      * Do not use this if you don't know what you are doing!
      * this interface for accessing specific setters is only for internal methods.
      */
+    @Getter
     private Internal internalAccess;
 
     protected WrapperEntity entity;
 
     public interface Internal {
-        Hologram spawn(Location location);
+        Hologram<?> spawn(Location location);
         void kill();
     }
 
@@ -120,14 +120,14 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     private void startRunnable() {
         if (task != null) return;
-        task = BukkitTasks.runTaskTimer(this::updateAffectedPlayers, 20L, updateTaskPeriod);
+        task = BukkitTasks.runTaskTimerAsync(this::updateAffectedPlayers, 20L, updateTaskPeriod);
     }
 
 
     private class InternalSetters implements Internal {
 
         @Override
-        public Hologram spawn(Location location) {
+        public Hologram<?> spawn(Location location) {
             Hologram.this.spawn(location);
             return Hologram.this;
         }
@@ -201,11 +201,13 @@ public abstract class Hologram<T extends Hologram<T>> {
             return;
         }
 
-        if (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY) {
-            List<Player> viewersToKeep = this.location.getWorld().getPlayers().stream()
+        World world = this.location.getWorld();
+
+        if (world != null && (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY)) {
+            List<Player> viewersToKeep = world.getPlayers().stream()
                     .filter(Objects::nonNull)
                     .filter(player -> player.isOnline()
-                            && player.getLocation().getWorld().equals(this.location.getWorld())
+                            && Objects.equals(player.getLocation().getWorld(), world)
                             && player.getLocation().distanceSquared(this.location) <= this.maxPlayerRenderDistanceSquared)
                     .toList();
 
@@ -220,9 +222,9 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     protected void sendPacket(PacketWrapper<?> packet, List<Player> players) {
         if (this.renderMode == RenderMode.NONE) return;
-        players.forEach(player -> {
-            HologramLib.getPlayerManager().sendPacket(player, packet);
-        });
+
+        players.forEach(player ->
+                HologramLib.getPlayerManager().sendPacket(player, packet));
     }
 
     private void spawn(Location location) {
@@ -237,14 +239,12 @@ public abstract class Hologram<T extends Hologram<T>> {
      * Attaches this hologram to another entity, making it ride the target entity.
      *
      * @param entityID The entity ID to attach the hologram to
-     * @param persistent If the hologram should be re-attached automatically or not TODO
      */
-    public void attach(int entityID, boolean persistent) {
+    public void attach(int entityID) {
         int[] hologramToArray = { this.entityID };
         WrapperPlayServerSetPassengers attachPacket = new WrapperPlayServerSetPassengers(entityID, hologramToArray);
-        BukkitTasks.runTask(() -> {
-            this.entity.sendPacketsToViewers(attachPacket);
-        });
+
+        BukkitTasks.runTaskAsync(() -> this.entity.sendPacketsToViewers(attachPacket));
     }
 
     /**
