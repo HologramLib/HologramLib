@@ -18,9 +18,6 @@ import me.tofaa.entitylib.EntityLib;
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -37,8 +34,6 @@ public abstract class HologramLib {
     private static PlayerManager playerManager;
 
     private static HologramManager hologramManager;
-
-    private static FoliaLib foliaLib;
 
     private static JavaPlugin plugin;
 
@@ -99,7 +94,7 @@ public abstract class HologramLib {
             initializeMetrics();
             initializeReplaceText();
 
-            foliaLib = new FoliaLib(plugin);
+            FoliaLib foliaLib = new FoliaLib(plugin);
             BukkitTasks.setPlugin(plugin);
             BukkitTasks.setFoliaLib(foliaLib);
 

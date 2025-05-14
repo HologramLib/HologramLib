@@ -18,7 +18,7 @@ import org.joml.Vector3f;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class TextHologram extends Hologram<TextHologram> {
 
     protected Component text = Component.text("");

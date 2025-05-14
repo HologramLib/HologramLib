@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class TextAnimation {
 
     private final List<String> textFrames = new ArrayList<>();

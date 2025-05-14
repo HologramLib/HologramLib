@@ -14,21 +14,23 @@ import org.joml.Vector3f;
 import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+
+@Getter
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class BlockHologram extends Hologram<BlockHologram> {
 
-    @Getter @Setter
+    @Setter
     @Accessors(chain = true)
     protected int block = 0;
 
-    @Getter @Setter
+    @Setter
     @Accessors(chain = true)
     protected boolean onFire = false;
 
-    @Getter @Setter
+    @Setter
     @Accessors(chain = true)
     protected boolean glowing = false;
 
-    @Getter
     @Accessors(chain = true)
     protected int glowColor = Color.YELLOW.getRGB();
 

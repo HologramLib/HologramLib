@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class PersistenceManager {
 
     private final File configFile;
@@ -27,6 +28,7 @@ public class PersistenceManager {
     @Getter
     private final Set<String> persistentLeaderboards = new HashSet<>();
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public PersistenceManager() {
         configFile = new File(HologramLib.getPlugin().getDataFolder(), "holograms.yml");
         if (!configFile.exists()) {
@@ -46,7 +48,7 @@ public class PersistenceManager {
         config.set("holograms." + hologram.getId() + ".renderMode", hologram.getRenderMode().name());
 
         Location loc = hologram.getLocation();
-        config.set("holograms." + hologram.getId() + ".location.world", loc.getWorld().getName());
+        config.set("holograms." + hologram.getId() + ".location.world", Objects.requireNonNull(loc.getWorld()).getName());
         config.set("holograms." + hologram.getId() + ".location.x", loc.getX());
         config.set("holograms." + hologram.getId() + ".location.y", loc.getY());
         config.set("holograms." + hologram.getId() + ".location.z", loc.getZ());
@@ -192,6 +194,7 @@ public class PersistenceManager {
                         double x = config.getDouble(path + ".location.x");
                         double y = config.getDouble(path + ".location.y");
                         double z = config.getDouble(path + ".location.z");
+                        assert worldName != null;
                         Location location = new Location(Bukkit.getWorld(worldName), x, y, z);
 
                         if ("TEXT".equals(type)) {
@@ -255,8 +258,6 @@ public class PersistenceManager {
         hologram.setGlowing(config.getBoolean(path + ".glowing", false));
         hologram.setGlowColor(Color.getColor(config.getString(path + ".glowColor", Color.YELLOW.toString())));
 
-        String itemType = config.getString(path + ".item.type", "minecraft:air");
-
         applyCommonProperties(hologram, path);
         HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
     }
@@ -283,15 +284,12 @@ public class PersistenceManager {
         Optional<Hologram<?>> headHologramOpt = HologramLib.getManager().flatMap(m -> m.getHologram(headHologramId));
 
         if (textHologramOpt.isEmpty() || headHologramOpt.isEmpty() ||
-                !(textHologramOpt.get() instanceof TextHologram) ||
-                !(headHologramOpt.get() instanceof ItemHologram)) {
+                !(textHologramOpt.get() instanceof TextHologram textHologram) ||
+                !(headHologramOpt.get() instanceof ItemHologram headHologram)) {
             Bukkit.getLogger().log(Level.WARNING, "Unable to load leaderboard " + id +
                     ": Hologram components not found or of wrong type");
             return;
         }
-
-        TextHologram textHologram = (TextHologram) textHologramOpt.get();
-        ItemHologram headHologram = (ItemHologram) headHologramOpt.get();
 
         LeaderboardHologram.LeaderboardOptions.LeaderboardOptionsBuilder optionsBuilder =
                 LeaderboardHologram.LeaderboardOptions.builder();
