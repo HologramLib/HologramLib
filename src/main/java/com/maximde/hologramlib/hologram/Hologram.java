@@ -26,6 +26,7 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.logging.Level;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class Hologram<T extends Hologram<T>> {
 
     @SuppressWarnings("unchecked")
@@ -388,19 +389,17 @@ public abstract class Hologram<T extends Hologram<T>> {
     public List<Player> getViewers() {
         Set<UUID> viewerUUIDs = this.entity.getViewers();
         List<Player> viewers = new ArrayList<>(viewerUUIDs.size());
-        for (UUID uuid : viewerUUIDs) {
+        viewerUUIDs.forEach(uuid -> {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 viewers.add(player);
             }
-        }
+        });
         return viewers;
     }
 
     public T addAllViewers(List<Player> viewerList) {
-        for (Player player : viewerList) {
-            this.entity.addViewer(player.getUniqueId());
-        }
+        viewerList.forEach(viewer -> this.entity.addViewer(viewer.getUniqueId()));
         return self();
     }
 

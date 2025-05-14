@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 @Getter
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class LeaderboardHologram {
 
     private final TextHologram textHologram;
@@ -203,7 +204,7 @@ public class LeaderboardHologram {
             this.firstPlaceHead.update();
         } catch (Exception exception) {
             Bukkit.getLogger().log(Level.WARNING, "Failed to update the first place playerhead in hologram! Error: " + exception.getMessage());
-            exception.printStackTrace();
+            Bukkit.getLogger().log(Level.WARNING, exception.getMessage());
         }
     }
 

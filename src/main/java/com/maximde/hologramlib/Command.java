@@ -6,6 +6,7 @@ import com.maximjsx.addonlib.model.AddonEntry;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public class Command implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, org.bukkit.command.@NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission("hologramlib.admin")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
             return true;

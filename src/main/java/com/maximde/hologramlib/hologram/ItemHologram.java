@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 @Getter
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ItemHologram extends Hologram<ItemHologram> {
 
     @Setter
