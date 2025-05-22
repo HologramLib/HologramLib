@@ -63,7 +63,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.maximjsx:HologramLib:1.7.1'
+    implementation 'com.github.maximjsx:HologramLib:1.7.4'
 }
 ```
 
