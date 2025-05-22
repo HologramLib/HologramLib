@@ -1,4 +1,4 @@
-project.version = "1.7.2"
+project.version = "1.7.4"
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -30,7 +30,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
     compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.8.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
 
     implementation("me.tofaa.entitylib:spigot:2.4.11-SNAPSHOT")
@@ -88,9 +88,5 @@ bukkit {
     foliaSupported = true
     depend = listOf("packetevents")
     softDepend = listOf("ItemsAdder")
-    commands {
-        register("hologramlib") {
-            description = "HologramLib admin commands"
-        }
-    }
+    name = "HologramLib"
 }

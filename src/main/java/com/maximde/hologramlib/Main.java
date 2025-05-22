@@ -15,7 +15,7 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        HologramLib.init(this.getCommand("hologramlib"));
+        HologramLib.init();
     }
 
     @Override

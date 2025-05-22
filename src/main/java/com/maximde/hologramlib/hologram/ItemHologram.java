@@ -33,7 +33,7 @@ public class ItemHologram extends Hologram<ItemHologram> {
     @Setter
     @Accessors(chain = true)
     protected ItemStack item = new ItemStack.Builder()
-            .type(ItemTypes.AIR).build();
+            .type(ItemTypes.IRON_AXE).build();
 
     @Setter
     @Accessors(chain = true)

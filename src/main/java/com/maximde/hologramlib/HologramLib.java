@@ -17,10 +17,10 @@ import me.tofaa.entitylib.APIConfig;
 import me.tofaa.entitylib.EntityLib;
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Objects;
+import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -38,6 +38,7 @@ public abstract class HologramLib {
     private static JavaPlugin plugin;
 
     private static boolean initialized = false;
+    private static boolean loading = false;
 
     @Getter
     private static PersistenceManager persistenceManager;
@@ -46,9 +47,9 @@ public abstract class HologramLib {
         init();
         return Optional.ofNullable(hologramManager)
                 .or(() -> {
-                    Bukkit.getLogger().log(Level.SEVERE,
-                            "HologramLib has not been initialized yet. " +
-                                    "Ensure 'HologramLib' is included as a dependency in your plugin.yml.");
+                    Bukkit.getLogger().log(Level.WARNING,
+                            "HologramLib#getManager() couldn't provide a valid instance! " +
+                                    "The plugin was not fully initialized yet.");
                     return Optional.empty();
                 });
     }
@@ -65,13 +66,26 @@ public abstract class HologramLib {
         PacketEvents.getAPI().load();
     }
 
-    public static void init(PluginCommand command) {
-        init();
-        Objects.requireNonNull(command).setExecutor(new Command(new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion())));
+    private static void registerCommand(org.bukkit.command.Command command) {
+        if(plugin == null) return;
+        try {
+            final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+            bukkitCommandMap.setAccessible(true);
+            CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+            commandMap.register(plugin.getDescription().getName(), command);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void init() {
-        if(plugin == null) {
+        init(true);
+    }
+
+    public static void init(boolean registerCommand) {
+        if(loading || initialized) return;
+
+       if(plugin == null) {
             Bukkit.getLogger().log(Level.SEVERE,
                     "Failed to init HologramLib! HologramLib#onLoad(JavaPlugin) was not called in onLoad() main class.");
             Bukkit.getLogger().log(Level.SEVERE,
@@ -79,13 +93,16 @@ public abstract class HologramLib {
             return;
         }
 
-        if(initialized) {
-            Bukkit.getLogger().log(Level.INFO,
-                    "Tried to initialize HologramLib a second time.");
-            return;
-        }
+       if(!plugin.isEnabled()) {
+           Bukkit.getLogger().log(Level.SEVERE,
+                   "Failed to init HologramLib! The plugin instance which is used by HologramLib has not been initialized (" + plugin.getName() + ") yet!");
 
-        initialized = true;
+           Bukkit.getLogger().log(Level.SEVERE,
+                   "If you are not shading HologramLib, add depends: HologramLib to your plugin.yml");
+           return;
+       }
+
+        loading = true;
 
         try {
             initializePacketEvents();
@@ -102,23 +119,32 @@ public abstract class HologramLib {
             hologramManager = new HologramManager(persistenceManager);
             persistenceManager.loadHolograms();
 
-            new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion())
-                    .setEnabledAddons(new String[]{"Commands"})
+            AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());
+            addonLib.setEnabledAddons(new String[]{"Commands"})
                     .init();
+            if(registerCommand) registerCommand(new HoloCommand(addonLib));
 
+
+            initialized = true;
+            plugin.getLogger().log(Level.INFO, "Successfully initialized!");
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to enable HologramLib", e);
-            Bukkit.getPluginManager().disablePlugin(plugin);
+        } finally {
+            loading = false;
         }
     }
 
     public static void onDisable() {
-        savePersistentHolograms();
+        try {
+            savePersistentHolograms();
+            hologramManager.removeAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void savePersistentHolograms() {
         if (persistenceManager != null && hologramManager != null) {
-            Bukkit.getLogger().log(Level.INFO, "Saving all persistent holograms before shutdown...");
             for (String id : persistenceManager.getPersistentHolograms()) {
                 hologramManager.getHologram(id).ifPresent(persistenceManager::saveHologram);
             }
@@ -148,7 +174,6 @@ public abstract class HologramLib {
 
     private static void initializeManagers() {
         playerManager = PacketEvents.getAPI().getPlayerManager();
-        plugin.getLogger().log(Level.INFO, "Initialized HologramLib Manager!");
     }
 
     private static void initializeMetrics() {
@@ -164,14 +189,14 @@ public abstract class HologramLib {
         try {
             return Optional.of(new ItemsAdderHolder());
         } catch (ClassNotFoundException e) {
-            plugin.getLogger().log(Level.INFO,"ItemsAdder not found. Using default text replacement.");
+            plugin.getLogger().log(Level.INFO,"Using default text replacement. (ItemsAdder is not installed)");
             return Optional.empty();
         }
     }
 
     public static JavaPlugin getPlugin() {
         if (plugin == null) {
-            throw new IllegalStateException("HologramLib has not been initialized");
+            throw new IllegalStateException("Tried to access the plugin instance but HologramLib has not been initialized");
         }
         return plugin;
     }

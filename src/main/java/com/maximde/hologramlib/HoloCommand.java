@@ -4,24 +4,25 @@ package com.maximde.hologramlib;
 import com.maximjsx.addonlib.core.AddonLib;
 import com.maximjsx.addonlib.model.AddonEntry;
 import org.bukkit.ChatColor;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
 
-public class Command implements CommandExecutor {
+public class HoloCommand extends Command {
 
     private final AddonLib addonLib;
 
-    public Command(AddonLib addonLib) {
+    public HoloCommand(AddonLib addonLib) {
+        super("hologramlib");
         this.addonLib = addonLib;
         this.addonLib.init();
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, org.bukkit.command.@NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean execute(@NotNull CommandSender sender, @NotNull String command, @NotNull String[] args) {
         if (!sender.hasPermission("hologramlib.admin")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
             return true;
@@ -63,7 +64,7 @@ public class Command implements CommandExecutor {
     }
 
     private void handleList(CommandSender sender) {
-        sender.sendMessage(ChatColor.GREEN + "Installed addons:");
+        sender.sendMessage(ChatColor.GREEN + "Available addons:");
         for (Map.Entry<String, AddonEntry> entry :
                 addonLib.getConfig().getAddonEntries().entrySet()) {
             String status = entry.getValue().isEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled";

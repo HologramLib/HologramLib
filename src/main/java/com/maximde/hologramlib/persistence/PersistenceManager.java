@@ -1,9 +1,14 @@
 package com.maximde.hologramlib.persistence;
 
+import com.github.retrooper.packetevents.protocol.item.ItemStack;
+import com.github.retrooper.packetevents.protocol.item.type.ItemType;
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.hologram.*;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -155,7 +160,9 @@ public class PersistenceManager {
     }
 
     private void saveTextHologram(TextHologram hologram, String path) {
-        config.set(path + ".text", hologram.getText());
+        MiniMessage miniMessage = MiniMessage.miniMessage();
+        String serializedText = miniMessage.serialize(hologram.getTextAsComponent());
+        config.set(path + ".text", serializedText);
         config.set(path + ".shadow", hologram.isShadow());
         config.set(path + ".maxLineWidth", hologram.getMaxLineWidth());
         config.set(path + ".backgroundColor", hologram.getBackgroundColor());
@@ -169,7 +176,6 @@ public class PersistenceManager {
         config.set(path + ".onFire", hologram.isOnFire());
         config.set(path + ".glowing", hologram.isGlowing());
         config.set(path + ".glowColor", hologram.getGlowColor());
-
         config.set(path + ".item.type", hologram.getItem().getType().getName().getKey());
     }
 
@@ -196,7 +202,6 @@ public class PersistenceManager {
                         double z = config.getDouble(path + ".location.z");
                         assert worldName != null;
                         Location location = new Location(Bukkit.getWorld(worldName), x, y, z);
-
                         if ("TEXT".equals(type)) {
                             loadTextHologram(id, renderMode, location, path);
                         } else if ("ITEM".equals(type)) {
@@ -230,9 +235,12 @@ public class PersistenceManager {
 
     private void loadTextHologram(String id, RenderMode renderMode, Location location, String path) {
         TextHologram hologram = new TextHologram(id, renderMode);
-
-        String text = config.getString(path + ".text", "");
-        hologram.setText(text);
+        String serializedText = config.getString(path + ".text");
+        if(serializedText != null) {
+            MiniMessage miniMessage = MiniMessage.miniMessage();
+            Component text = miniMessage.deserialize(serializedText);
+            hologram.setText(text);
+        }
         hologram.setShadow(config.getBoolean(path + ".shadow", true));
         hologram.setMaxLineWidth(config.getInt(path + ".maxLineWidth", 200));
         hologram.setBackgroundColor(config.getInt(path + ".backgroundColor", 0));
@@ -251,12 +259,16 @@ public class PersistenceManager {
     private void loadItemHologram(String id, RenderMode renderMode, Location location, String path) {
         ItemHologram hologram = new ItemHologram(id, renderMode);
 
+        Color color = new Color(config.getInt(path + ".glowColor", Color.YELLOW.getRGB()), true);
+
+
         String displayTypeStr = config.getString(path + ".displayType", "FIXED");
         hologram.setDisplayType(me.tofaa.entitylib.meta.display.ItemDisplayMeta.DisplayType.valueOf(displayTypeStr));
 
         hologram.setOnFire(config.getBoolean(path + ".onFire", false));
         hologram.setGlowing(config.getBoolean(path + ".glowing", false));
-        hologram.setGlowColor(Color.getColor(config.getString(path + ".glowColor", Color.YELLOW.toString())));
+        hologram.setGlowColor(color);
+        hologram.setItem(ItemStack.builder().type(Objects.requireNonNull(ItemTypes.getByName(config.getString(path + ".item.type", "air").toLowerCase()))).build());
 
         applyCommonProperties(hologram, path);
         HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
@@ -265,10 +277,12 @@ public class PersistenceManager {
     private void loadBlockHologram(String id, RenderMode renderMode, Location location, String path) {
         BlockHologram hologram = new BlockHologram(id, renderMode);
 
+        Color color = new Color(config.getInt(path + ".glowColor", Color.YELLOW.getRGB()), true);
+
         hologram.setBlock(config.getInt(path + ".block", 0));
         hologram.setOnFire(config.getBoolean(path + ".onFire", false));
         hologram.setGlowing(config.getBoolean(path + ".glowing", false));
-        hologram.setGlowColor(Color.getColor(config.getString(path + ".glowColor", Color.YELLOW.toString())));
+        hologram.setGlowColor(color);
 
         applyCommonProperties(hologram, path);
         HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
