@@ -39,10 +39,10 @@ Entity attachment • Per-player visibility • View distance control
 **Compatibility**  
 | Server Software | Minecraft Versions       | 
 |-----------------|--------------------------|
-| **Paper**       | 1.19.4 → 1.21.4 ✔️       |
-| **Purpur**      | 1.19.4 → 1.21.4 ✔️       | 
-| **Folia**       | 1.19.4 → 1.21.4 ✔️       | 
-| **Spigot**      | 1.19.4 → 1.21.4 ✔️       | 
+| **Paper**       | 1.19.4 → 1.21.5 ✔️       |
+| **Purpur**      | 1.19.4 → 1.21.5 ✔️       | 
+| **Folia**       | 1.19.4 → 1.21.5 ✔️       | 
+| **Spigot**      | 1.19.4 → 1.21.5 ✔️       | 
 | **Bedrock**     | ❌ Not supported         | 
 | **Legacy**      | ❌ (1.8 - 1.19.3)        | 
 
