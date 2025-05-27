@@ -120,8 +120,11 @@ manager.spawn(hologram);
 - Particle-effect holograms
 - Interactive holograms
 - Improved animation system
-- Persistant holograms
+- ~~Persistant holograms~~
 - PlaceholderAPI
+
+> [!WARNING]
+> Persistant holograms & the addon system are still experimental features
 
 ## Contributors
 Contributions to this repo or the example plugin are welcome!
