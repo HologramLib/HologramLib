@@ -149,7 +149,7 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
-  <sub>Used by 60+ servers | 4,000+ downloads across platforms</sub><br>
+  <sub>Used by 70+ servers | 4,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •
