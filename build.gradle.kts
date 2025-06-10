@@ -33,7 +33,7 @@ dependencies {
     compileOnly("com.github.retrooper:packetevents-spigot:2.8.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
 
-    implementation("me.tofaa.entitylib:spigot:2.4.11-SNAPSHOT")
+    implementation("me.tofaa.entitylib:spigot:3.0.3-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("com.github.technicallycoded:FoliaLib:main-SNAPSHOT")
 

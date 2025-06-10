@@ -129,6 +129,7 @@ public class TextHologram extends Hologram<TextHologram> {
         meta.setBackgroundColor(this.backgroundColor);
         meta.setTextOpacity(this.textOpacity);
         meta.setShadow(this.shadow);
+        meta.setInvisible(this.isInvisible);
         if(super.brightness > -1) meta.setBrightnessOverride(super.brightness);
         meta.setSeeThrough(this.seeThroughBlocks);
         setInternalAlignment(meta);
