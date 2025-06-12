@@ -243,6 +243,11 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     /**
      * Attaches this hologram to another entity, making it ride the target entity.
+     * <b>Warning:</b> Keep in mind that the hologram's location is not automatically
+     * updated when it is attached to another entity, so if the entity moves too far
+     * away from the hologram's location, the hologram may be unloaded.
+     * To work around this, you will need to teleport the hologram to the entity's
+     * location when the entity is moved far away from the hologram's original location.
      *
      * @param entityId The entity id to attach the hologram to
      */
@@ -424,7 +429,7 @@ public abstract class Hologram<T extends Hologram<T>> {
         this.entity.addViewer(player.getUniqueId());
         if (attachedEntityId != null)
             sendPacket(new WrapperPlayServerSetPassengers(
-                    attachedEntityId, addElement(PassengerManager.getPassengers(attachedEntityId), this.entityID)),
+                            attachedEntityId, addElement(PassengerManager.getPassengers(attachedEntityId), this.entityID)),
                     Collections.singletonList(player)
             );
         return self();
