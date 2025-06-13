@@ -142,6 +142,11 @@ Contributions to this repo or the example plugin are welcome!
 
 <!-- CONTRIBUTORS:END -->
 
+**Used by:**
+| Server |   |
+|--------|----------|
+| [rangemc]( https://www.rangemc.net/ ) | <img src="https://github.com/user-attachments/assets/c65bc715-02da-4c69-94f7-7c3b96ab9d14" width="50" /> | 
+
 <div align="center"><sup>Live Statistics</sup></div>
 
 [![img](https://bstats.org/signatures/bukkit/HologramAPI.svg)](https://bstats.org/plugin/bukkit/HologramAPI/19375)
