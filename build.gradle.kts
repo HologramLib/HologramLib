@@ -1,4 +1,4 @@
-project.version = "1.7.4"
+project.version = "1.7.5"
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -20,8 +20,6 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://repo.codemc.io/repository/maven-releases/")
-    maven("https://repo.codemc.io/repository/maven-snapshots/")
-    maven("https://maven.evokegames.gg/snapshots")
     maven("https://jitpack.io")
 }
 
@@ -33,9 +31,9 @@ dependencies {
     compileOnly("com.github.retrooper:packetevents-spigot:2.8.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
 
-    implementation("me.tofaa.entitylib:spigot:2.4.11-SNAPSHOT")
+    implementation("com.github.Tofaa2.EntityLib:spigot:2.4.11")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
-    implementation("com.github.technicallycoded:FoliaLib:main-SNAPSHOT")
+    implementation("com.github.technicallycoded:FoliaLib:0.4.4")
 
     implementation("com.github.HologramLib:AddonLib:1.1.0")
 
