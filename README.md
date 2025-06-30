@@ -39,10 +39,10 @@ Entity attachment • Per-player visibility • View distance control
 **Compatibility**  
 | Server Software | Minecraft Versions       | 
 |-----------------|--------------------------|
-| **Paper**       | 1.19.4 → 1.21.4 ✔️       |
-| **Purpur**      | 1.19.4 → 1.21.4 ✔️       | 
-| **Folia**       | 1.19.4 → 1.21.4 ✔️       | 
-| **Spigot**      | 1.19.4 → 1.21.4 ✔️       | 
+| **Paper**       | 1.19.4 → 1.21.5 ✔️       |
+| **Purpur**      | 1.19.4 → 1.21.5 ✔️       | 
+| **Folia**       | 1.19.4 → 1.21.5 ✔️       | 
+| **Spigot**      | 1.19.4 → 1.21.5 ✔️       | 
 | **Bedrock**     | ❌ Not supported         | 
 | **Legacy**      | ❌ (1.8 - 1.19.3)        | 
 
@@ -63,7 +63,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.maximjsx:HologramLib:1.7.1'
+    implementation 'com.github.maximjsx:HologramLib:1.7.4'
 }
 ```
 
@@ -120,8 +120,11 @@ manager.spawn(hologram);
 - Particle-effect holograms
 - Interactive holograms
 - Improved animation system
-- Persistant holograms
+- ~~Persistant holograms~~
 - PlaceholderAPI
+
+> [!WARNING]
+> Persistant holograms & the addon system are still experimental features
 
 ## Contributors
 Contributions to this repo or the example plugin are welcome!
@@ -139,6 +142,11 @@ Contributions to this repo or the example plugin are welcome!
 
 <!-- CONTRIBUTORS:END -->
 
+**Used by:**
+| Server |   |
+|--------|----------|
+| [rangemc]( https://www.rangemc.net/ ) | <img src="https://github.com/user-attachments/assets/c65bc715-02da-4c69-94f7-7c3b96ab9d14" width="50" /> | 
+
 <div align="center"><sup>Live Statistics</sup></div>
 
 [![img](https://bstats.org/signatures/bukkit/HologramAPI.svg)](https://bstats.org/plugin/bukkit/HologramAPI/19375)
@@ -146,7 +154,7 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
-  <sub>Used by 50+ servers | 3,500+ downloads across platforms</sub><br>
+  <sub>Used by 70+ servers | 4,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •

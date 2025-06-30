@@ -1,9 +1,11 @@
 package com.maximde.hologramlib;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
+import com.maximde.hologramlib.hologram.PassengerManager;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
@@ -173,7 +175,9 @@ public abstract class HologramLib {
     }
 
     private static void initializeManagers() {
-        playerManager = PacketEvents.getAPI().getPlayerManager();
+        PacketEventsAPI<?> packetEventsAPI = PacketEvents.getAPI();
+        playerManager = packetEventsAPI.getPlayerManager();
+        new PassengerManager(packetEventsAPI);
     }
 
     private static void initializeMetrics() {

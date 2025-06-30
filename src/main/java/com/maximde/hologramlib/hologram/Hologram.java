@@ -3,7 +3,7 @@ package com.maximde.hologramlib.hologram;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.util.Quaternion4f;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
-import com.github.retrooper.packetevents.wrapper.play.server.*;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetPassengers;
 import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.TaskHandle;
@@ -23,10 +23,11 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.logging.Level;
 
-@SuppressWarnings({"unused", "UnusedReturnValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue", "deprecation", "DeprecatedIsStillUsed"})
 public abstract class Hologram<T extends Hologram<T>> {
 
     @SuppressWarnings("unchecked")
@@ -41,7 +42,6 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     @Getter @Accessors(chain = true)
     protected long updateTaskPeriod = 20L;
-
 
     @Getter @Accessors(chain = true)
     protected double maxPlayerRenderDistanceSquared = 62500;
@@ -60,6 +60,9 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     @Getter @Accessors(chain = true)
     protected int brightness = -1;
+
+    @Getter @Accessors(chain = true)
+    protected boolean isInvisible = true;
 
     @Getter
     protected final String id;
@@ -91,12 +94,14 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     /**
      * Do not use this if you don't know what you are doing!
-     * this interface for accessing specific setters is only for internal methods.
+     * This interface for accessing specific setters is only for internal methods.
      */
     @Getter
-    private Internal internalAccess;
+    private final Internal internalAccess;
 
     protected WrapperEntity entity;
+
+    protected @Nullable Integer attachedEntityId;
 
     public interface Internal {
         Hologram<?> spawn(Location location);
@@ -238,14 +243,62 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     /**
      * Attaches this hologram to another entity, making it ride the target entity.
+     * <b>Warning:</b> Keep in mind that the hologram's location is not automatically
+     * updated when it is attached to another entity, so if the entity moves too far
+     * away from the hologram's location, the hologram may be unloaded.
+     * To work around this, you will need to teleport the hologram to the entity's
+     * location when the entity is moved far away from the hologram's original location.
      *
-     * @param entityID The entity ID to attach the hologram to
+     * @param entityId The entity id to attach the hologram to
      */
-    public void attach(int entityID) {
-        int[] hologramToArray = { this.entityID };
-        WrapperPlayServerSetPassengers attachPacket = new WrapperPlayServerSetPassengers(entityID, hologramToArray);
-
+    public void attach(int entityId) {
+        attachedEntityId = entityId;
+        WrapperPlayServerSetPassengers attachPacket = new WrapperPlayServerSetPassengers(entityId, addElement(PassengerManager.getPassengers(entityId), this.entityID));
         BukkitTasks.runTaskAsync(() -> this.entity.sendPacketsToViewers(attachPacket));
+    }
+
+    /**
+     * Detaches the hologram from its attached entity, if any.
+     */
+    public void detach() {
+        if (attachedEntityId != null) {
+            WrapperPlayServerSetPassengers detachPacket = new WrapperPlayServerSetPassengers(attachedEntityId, removeElement(PassengerManager.getPassengers(attachedEntityId), this.entityID));
+            BukkitTasks.runTaskAsync(() -> this.entity.sendPacketsToViewers(detachPacket));
+            attachedEntityId = null;
+        }
+    }
+
+    /**
+     * Adds an element to the array if it is not already present.
+     *
+     * @param array The input array to which the element may be added.
+     * @param element The element to be added to the array.
+     * @return A new array containing the original elements plus the new element if it was not already included.
+     */
+    public static int[] addElement(int[] array, int element) {
+        for (int value : array) if (value == element) return array;
+
+        int[] result = Arrays.copyOf(array, array.length + 1);
+        result[array.length] = element;
+        return result;
+    }
+
+    /**
+     * Removes all occurrences of the specified element from the given array.
+     *
+     * @param array The input array from which the element will be removed.
+     * @param element The element to be removed from the array.
+     * @return A new array with all occurrences of the specified element removed.
+     */
+    public static int[] removeElement(int[] array, int element) {
+        int count = 0;
+        for (int value : array) if (value == element) count++;
+
+        if (count == 0) return array;
+        int[] result = new int[array.length - count];
+        int i = 0;
+        for (int value : array) if (value != element) result[i++] = value;
+        return result;
     }
 
     /**
@@ -374,6 +427,11 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     public T addViewer(Player player) {
         this.entity.addViewer(player.getUniqueId());
+        if (attachedEntityId != null)
+            sendPacket(new WrapperPlayServerSetPassengers(
+                            attachedEntityId, addElement(PassengerManager.getPassengers(attachedEntityId), this.entityID)),
+                    Collections.singletonList(player)
+            );
         return self();
     }
 
@@ -399,7 +457,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     }
 
     public T addAllViewers(List<Player> viewerList) {
-        viewerList.forEach(viewer -> this.entity.addViewer(viewer.getUniqueId()));
+        viewerList.forEach(this::addViewer);
         return self();
     }
 
@@ -415,6 +473,17 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     public T setScale(Vector3F scale) {
         this.scale = new Vector3f(scale.x, scale.y, scale.z);
+        return self();
+    }
+
+    /**
+     * Sets the visibility state of the hologram.
+     *
+     * @param isInvisible A boolean indicating whether the hologram's blue line when using F3+B is invisible (true) or visible (false).
+     * @return The current instance of the hologram for method chaining.
+     */
+    public T setIsInvisible(boolean isInvisible) {
+        this.isInvisible = isInvisible;
         return self();
     }
 
