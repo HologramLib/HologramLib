@@ -20,5 +20,11 @@ public enum RenderMode {
      * Use RenderMode.ALL instead
      */
     @Deprecated
-    NEARBY
+    NEARBY,
+
+    /**
+     * Works like render mode ALL with the difference if the hologram is attached to a player
+     * the player will not see the hologram
+     */
+    NOT_ATTACHED_PLAYER
 }

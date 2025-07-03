@@ -209,13 +209,22 @@ public abstract class Hologram<T extends Hologram<T>> {
 
         World world = this.location.getWorld();
 
-        if (world != null && (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY)) {
+        if (world != null && (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY || this.renderMode == RenderMode.NOT_ATTACHED_PLAYER)) {
             List<Player> viewersToKeep = world.getPlayers().stream()
                     .filter(Objects::nonNull)
                     .filter(player -> player.isOnline()
                             && Objects.equals(player.getLocation().getWorld(), world)
                             && player.getLocation().distanceSquared(this.location) <= this.maxPlayerRenderDistanceSquared)
                     .toList();
+
+            if (this.renderMode == RenderMode.NOT_ATTACHED_PLAYER && attachedEntityId != null) {
+                Player attachedPlayer = getPlayerByEntityId(attachedEntityId);
+                if (attachedPlayer != null) {
+                    viewersToKeep = viewersToKeep.stream()
+                            .filter(player -> !player.equals(attachedPlayer))
+                            .toList();
+                }
+            }
 
             Set<UUID> viewersToRemove = new HashSet<>(this.entity.getViewers());
             viewersToKeep.forEach(player -> viewersToRemove.remove(player.getUniqueId()));
@@ -242,6 +251,28 @@ public abstract class Hologram<T extends Hologram<T>> {
     }
 
     /**
+     * Attaches this hologram to a player.
+     * @param player The player to attach the hologram to
+     */
+    public void attachToPlayer(Player player) {
+        attach(player.getEntityId());
+    }
+    /**
+     *
+     * Gets the player associated with the given entity ID.
+     * @param entityId The entity ID to search for
+     * @return The player if found, null otherwise
+     */
+    private Player getPlayerByEntityId(int entityId) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getEntityId() == entityId) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Attaches this hologram to another entity, making it ride the target entity.
      * <b>Warning:</b> Keep in mind that the hologram's location is not automatically
      * updated when it is attached to another entity, so if the entity moves too far
@@ -253,6 +284,14 @@ public abstract class Hologram<T extends Hologram<T>> {
      */
     public void attach(int entityId) {
         attachedEntityId = entityId;
+
+        if (renderMode == RenderMode.NOT_ATTACHED_PLAYER) {
+            Player attachedPlayer = getPlayerByEntityId(entityId);
+            if (attachedPlayer != null) {
+                removeViewer(attachedPlayer);
+            }
+        }
+
         WrapperPlayServerSetPassengers attachPacket = new WrapperPlayServerSetPassengers(entityId, addElement(PassengerManager.getPassengers(entityId), this.entityID));
         BukkitTasks.runTaskAsync(() -> this.entity.sendPacketsToViewers(attachPacket));
     }
@@ -262,6 +301,13 @@ public abstract class Hologram<T extends Hologram<T>> {
      */
     public void detach() {
         if (attachedEntityId != null) {
+            if (renderMode == RenderMode.NOT_ATTACHED_PLAYER) {
+                Player previouslyAttachedPlayer = getPlayerByEntityId(attachedEntityId);
+                if (previouslyAttachedPlayer != null) {
+                    addViewer(previouslyAttachedPlayer);
+                }
+            }
+
             WrapperPlayServerSetPassengers detachPacket = new WrapperPlayServerSetPassengers(attachedEntityId, removeElement(PassengerManager.getPassengers(attachedEntityId), this.entityID));
             BukkitTasks.runTaskAsync(() -> this.entity.sendPacketsToViewers(detachPacket));
             attachedEntityId = null;
