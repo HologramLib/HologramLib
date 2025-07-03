@@ -63,19 +63,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.maximjsx:HologramLib:1.7.4'
+    implementation 'com.github.maximjsx:HologramLib:1.7.5'
 }
-```
-
-When using maven you also have to add the following repo:
-```xml
-<repository>
-    <id>evoke-snapshots</id>
-    <url>https://maven.evokegames.gg/snapshots</url>
-    <snapshots>
-        <enabled>true</enabled>
-    </snapshots>
-</repository>
 ```
 
 **Step 2: Basic Implementation**
