@@ -200,7 +200,30 @@ public abstract class Hologram<T extends Hologram<T>> {
      * Removes viewers who are too far away or in different worlds.
      */
     private void updateAffectedPlayers() {
-        if(this.dead || renderMode == RenderMode.VIEWER_LIST) return;
+        if(this.dead) return;
+
+        if(renderMode == RenderMode.VIEWER_LIST) {
+            if (attachedEntityId != null) {
+                Player attachedPlayer = getPlayerByEntityId(attachedEntityId);
+                if (attachedPlayer != null && attachedPlayer.isOnline()) {
+                    Location playerLocation = attachedPlayer.getLocation();
+                    if (playerLocation.getWorld() != null) {
+                        this.teleport(playerLocation);
+                    }
+                }
+                Set<UUID> currentViewers = new HashSet<>(this.entity.getViewers());
+                currentViewers.forEach(uuid -> {
+                    Player player = Bukkit.getPlayer(uuid);
+                    if (player != null && player.isOnline()) {
+                        sendPacket(new WrapperPlayServerSetPassengers(
+                                        attachedEntityId, addElement(PassengerManager.getPassengers(attachedEntityId), this.entityID)),
+                                Collections.singletonList(player)
+                        );
+                    }
+                });
+            }
+            return;
+        }
 
         if(this.location == null) {
             Bukkit.getLogger().log(Level.WARNING, "Tried to update hologram with ID " + this.id + " entity type " + this.entityType.getName().getKey() + ". But the location is not set!");
