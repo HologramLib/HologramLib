@@ -87,6 +87,6 @@ bukkit {
     author = "MaximDe"
     foliaSupported = true
     depend = listOf("packetevents")
-    softDepend = listOf("ItemsAdder")
+    softDepend = listOf("ItemsAdder", "PlaceholderAPI")
     name = "HologramLib"
 }
