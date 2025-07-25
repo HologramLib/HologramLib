@@ -17,6 +17,7 @@ public class HologramManager {
 
     private final Map<TextHologram, TaskHandle> hologramAnimations = new ConcurrentHashMap<>();
     private final Map<String, Hologram<?>> hologramsMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Hologram<?>> entityIdToHologramMap = new ConcurrentHashMap<>();
 
     private final PersistenceManager persistenceManager;
 
@@ -50,6 +51,10 @@ public class HologramManager {
         return Optional.ofNullable(hologramsMap.get(id));
     }
 
+    public Optional<Hologram<?>> getHologramByEntityId(int entityId) {
+        return Optional.ofNullable(entityIdToHologramMap.get(entityId));
+    }
+
     public LeaderboardHologram generateLeaderboard(Location location, Map<Integer, String> leaderboardData, boolean persistant) {
         return generateLeaderboard(location, leaderboardData, LeaderboardHologram.LeaderboardOptions.builder().build(), persistant);
     }
@@ -78,16 +83,16 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location) {
+        this.register(hologram);
         BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location).update());
 
-        this.register(hologram);
         return hologram;
     }
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location, boolean persistent) {
+        this.register(hologram);
         BukkitTasks.runTask(() -> {
             hologram.getInternalAccess().spawn(location).update();
-            this.register(hologram);
             if (persistent && persistenceManager != null) {
                 persistenceManager.saveHologram(hologram);
             }
@@ -108,6 +113,7 @@ public class HologramManager {
             return false;
         }
         hologramsMap.put(hologram.getId(), hologram);
+        entityIdToHologramMap.put(hologram.getEntityID(), hologram);
         return true;
     }
 
@@ -118,6 +124,7 @@ public class HologramManager {
     public boolean remove(String id, boolean removePersistence) {
         Hologram<?> hologram = hologramsMap.remove(id);
         if (hologram != null) {
+            entityIdToHologramMap.remove(hologram.getEntityID());
             if (hologram instanceof TextHologram textHologram) cancelAnimation(textHologram);
             hologram.getInternalAccess().kill();
 
@@ -148,7 +155,7 @@ public class HologramManager {
             hologram.getInternalAccess().kill();
 
             if (!removePersistence && persistenceManager != null &&
-                    persistenceManager.getPersistentHolograms().contains(hologram.getId())) {
+                persistenceManager.getPersistentHolograms().contains(hologram.getId())) {
                 persistenceManager.saveHologram(hologram);
             }
         });
@@ -160,6 +167,7 @@ public class HologramManager {
         }
 
         hologramsMap.clear();
+        entityIdToHologramMap.clear();
     }
 
     public void removeAll() {
@@ -168,7 +176,7 @@ public class HologramManager {
 
     public boolean remove(LeaderboardHologram leaderboardHologram, boolean removePersistence) {
         return remove(leaderboardHologram.getTextHologram(), removePersistence) &&
-                remove(leaderboardHologram.getFirstPlaceHead(), removePersistence);
+            remove(leaderboardHologram.getFirstPlaceHead(), removePersistence);
     }
 
     public boolean remove(LeaderboardHologram leaderboardHologram) {
