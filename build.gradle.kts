@@ -33,6 +33,10 @@ dependencies {
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
+    depend = listOf("packetevents")
+    softDepend = listOf("ItemsAdder", "PlaceholderAPI")
+    name = "HologramLib"
+
     implementation("com.github.Tofaa2.EntityLib:spigot:2.4.11")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("com.github.technicallycoded:FoliaLib:0.4.4")
