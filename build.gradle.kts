@@ -21,6 +21,7 @@ repositories {
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://repo.codemc.io/repository/maven-releases/")
     maven("https://jitpack.io")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 dependencies {
@@ -30,6 +31,7 @@ dependencies {
     compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.8.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation("com.github.Tofaa2.EntityLib:spigot:2.4.11")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
@@ -85,6 +87,6 @@ bukkit {
     author = "MaximDe"
     foliaSupported = true
     depend = listOf("packetevents")
-    softDepend = listOf("ItemsAdder")
+    softDepend = listOf("ItemsAdder", "PlaceholderAPI")
     name = "HologramLib"
 }

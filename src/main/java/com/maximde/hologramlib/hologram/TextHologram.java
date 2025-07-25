@@ -13,6 +13,7 @@ import me.tofaa.entitylib.meta.display.TextDisplayMeta;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.joml.Vector3f;
 
@@ -21,6 +22,10 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class TextHologram extends Hologram<TextHologram> {
 
+    public static final int TEXT_DISPLAY_META_INDEX = 15; // Index for the text component in TextDisplayMeta
+
+    @Getter
+    protected String rawText = "";
     protected Component text = Component.text("");
 
     @Setter @Getter @Accessors(chain = true)
@@ -48,6 +53,9 @@ public class TextHologram extends Hologram<TextHologram> {
 
     @Setter @Getter @Accessors(chain = true)
     private byte textOpacity = (byte) -1;
+
+    @Setter @Getter @Accessors(chain = true)
+    private boolean placeholderApiEnabled = false;
 
     /**
      * Creates a new text hologram with the specified ID and render mode.
@@ -90,12 +98,13 @@ public class TextHologram extends Hologram<TextHologram> {
     public TextHologram copy(String id) {
         TextHologram copy = new TextHologram(id, this.renderMode);
         copy.text = this.text;
+        copy.rawText = this.rawText;
         copy.scale = new Vector3f(this.scale);
         copy.translation = new Vector3f(this.translation);
         copy.rightRotation = new Quaternion4f(this.rightRotation.getX(), this.rightRotation.getY(),
-                this.rightRotation.getZ(), this.rightRotation.getW());
+            this.rightRotation.getZ(), this.rightRotation.getW());
         copy.leftRotation = new Quaternion4f(this.leftRotation.getX(), this.leftRotation.getY(),
-                this.leftRotation.getZ(), this.leftRotation.getW());
+            this.leftRotation.getZ(), this.leftRotation.getW());
         copy.billboard = this.billboard;
         copy.teleportDuration = this.teleportDuration;
         copy.interpolationDurationTransformation = this.interpolationDurationTransformation;
@@ -108,14 +117,17 @@ public class TextHologram extends Hologram<TextHologram> {
         copy.textOpacity = this.textOpacity;
         copy.updateTaskPeriod = this.updateTaskPeriod;
         copy.maxPlayerRenderDistanceSquared = this.maxPlayerRenderDistanceSquared;
+        copy.placeholderApiEnabled = this.placeholderApiEnabled;
         return copy;
     }
-
 
     @Override
     protected EntityMeta applyMeta() {
         TextDisplayMeta meta = (TextDisplayMeta) super.entity.getEntityMeta();
-        meta.setText(getTextAsComponent());
+
+        // Set the text, if PlaceholderAPI is enabled, we'll handle it per-player in the hook
+        meta.setText(this.text);
+
         meta.setInterpolationDelay(-1);
         meta.setTransformationInterpolationDuration(this.interpolationDurationTransformation);
         meta.setPositionRotationInterpolationDuration(this.teleportDuration);
@@ -156,21 +168,53 @@ public class TextHologram extends Hologram<TextHologram> {
     }
 
     public TextHologram setText(String text) {
+        this.rawText = text;
         this.text = Component.text(replaceFontImages(text));
         return this;
     }
 
     public TextHologram setText(Component component) {
+        this.rawText = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().serialize(component);
         this.text = component;
         return this;
     }
 
     public TextHologram setMiniMessageText(String text) {
+        this.rawText = text;
         this.text = MiniMessage.get(replaceFontImages(text));
         return this;
     }
 
-    private String replaceFontImages(String string) {
+    public TextHologram setRawText(String rawText) {
+        this.rawText = rawText;
+
+        if (!placeholderApiEnabled) {
+            this.text = MiniMessage.get(replaceFontImages(rawText));
+        }
+        return this;
+    }
+
+    /**
+     * Gets the text with placeholders replaced for a specific player.
+     * Only works if PlaceholderAPI is enabled and available.
+     */
+    public Component getTextForPlayer(Player player) {
+        if (!placeholderApiEnabled || rawText == null || rawText.isEmpty()) {
+            return this.text;
+        }
+
+        try {
+            Class<?> placeholderAPIClass = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
+            java.lang.reflect.Method setPlaceholdersMethod = placeholderAPIClass.getMethod("setPlaceholders", org.bukkit.entity.Player.class, String.class);
+
+            String parsedText = (String) setPlaceholdersMethod.invoke(null, player, rawText);
+            return MiniMessage.get(replaceFontImages(parsedText));
+        } catch (Exception e) {
+            return this.text;
+        }
+    }
+
+    public String replaceFontImages(String string) {
         return HologramLib.getReplaceText().replace(string);
     }
 }
