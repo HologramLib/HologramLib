@@ -6,6 +6,7 @@ import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
+import com.maximde.hologramlib.hook.PlaceholderAPIHook;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
@@ -20,6 +21,8 @@ import me.tofaa.entitylib.EntityLib;
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
@@ -120,6 +123,16 @@ public abstract class HologramLib {
             persistenceManager = new PersistenceManager();
             hologramManager = new HologramManager(persistenceManager);
             persistenceManager.loadHolograms();
+
+            PluginManager pluginManager = Bukkit.getPluginManager();
+
+            Plugin placeholderAPIPlugin = pluginManager.getPlugin("PlaceholderAPI");
+            if (placeholderAPIPlugin != null && placeholderAPIPlugin.isEnabled()) {
+                plugin.getLogger().log(Level.INFO, "PlaceholderAPI found! Initializing hook...");
+                new PlaceholderAPIHook(PacketEvents.getAPI());
+            } else {
+                plugin.getLogger().log(Level.INFO, "PlaceholderAPI not found or not enabled. PlaceholderAPI support will be disabled.");
+            }
 
             AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());
             addonLib.setEnabledAddons(new String[]{"Commands"})
