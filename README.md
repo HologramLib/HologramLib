@@ -124,8 +124,7 @@ Contributions to this repo or the example plugin are welcome!
 |--------|----------|
 | [![](https://avatars.githubusercontent.com/u/114857048?v=4&s=50)](https://github.com/maximjsx) | [maximjsx]( https://github.com/maximjsx ) |
 | [![](https://avatars.githubusercontent.com/u/67076970?v=4&s=50)](https://github.com/Fedox-die-Ente) | [Fedox-die-Ente]( https://github.com/Fedox-die-Ente ) |
-| [![](https://avatars.githubusercontent.com/u/153451816?v=4&s=50)](https://github.com/misieur) | [misieur]( https://github.com/misieur ) |
-| [![](https://avatars.githubusercontent.com/in/15368?v=4&s=50)](https://github.com/apps/github-actions) | [github-actions[bot]]( https://github.com/apps/github-actions ) |
+| <img src="https://avatars.githubusercontent.com/u/153451816?v=4" width="50" /> | [misieur]( https://github.com/misieur ) |
 | [![](https://avatars.githubusercontent.com/u/116300577?v=4&s=50)](https://github.com/WhyZerVellasskx) | [WhyZerVellasskx]( https://github.com/WhyZerVellasskx ) |
 | [![](https://avatars.githubusercontent.com/u/46348263?v=4&s=50)](https://github.com/RootException) | [RootException]( https://github.com/RootException ) |
 | [![](https://avatars.githubusercontent.com/u/13736324?v=4&s=50)](https://github.com/matt11matthew) | [matt11matthew]( https://github.com/matt11matthew ) |
