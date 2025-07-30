@@ -42,7 +42,7 @@ Entity attachment • Per-player visibility • View distance control
 | **Paper**       | 1.19.4 → 1.21.5 ✔️       |
 | **Purpur**      | 1.19.4 → 1.21.5 ✔️       | 
 | **Folia**       | 1.19.4 → 1.21.5 ✔️       | 
-| **Spigot**      | 1.19.4 → 1.21.5 ✔️       | 
+| **Spigot**      | ❌ Not supported         | 
 | **Bedrock**     | ❌ Not supported         | 
 | **Legacy**      | ❌ (1.8 - 1.19.3)        | 
 
