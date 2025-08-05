@@ -2,11 +2,13 @@ package com.maximde.hologramlib;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
 import com.maximde.hologramlib.hook.PlaceholderAPIHook;
+import com.maximde.hologramlib.listener.InteractionPacketListener;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
@@ -21,6 +23,7 @@ import me.tofaa.entitylib.EntityLib;
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
+import org.bukkit.entity.Interaction;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,7 +70,6 @@ public abstract class HologramLib {
                         PacketEvents::setAPI,
                         () -> plugin.getLogger().severe("Failed to build PacketEvents API")
                 );
-
         PacketEvents.getAPI().load();
     }
 
@@ -122,6 +124,8 @@ public abstract class HologramLib {
 
             persistenceManager = new PersistenceManager();
             hologramManager = new HologramManager(persistenceManager);
+            PacketEvents.getAPI().getEventManager().registerListener(new InteractionPacketListener(hologramManager),
+                    PacketListenerPriority.LOW);
             persistenceManager.loadHolograms();
 
             PluginManager pluginManager = Bukkit.getPluginManager();
@@ -153,6 +157,7 @@ public abstract class HologramLib {
         try {
             savePersistentHolograms();
             hologramManager.removeAll();
+            hologramManager.removeAllInteractionBoxes();
         } catch (Exception e) {
             e.printStackTrace();
         }

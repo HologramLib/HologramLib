@@ -21,10 +21,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Level;
 
 @SuppressWarnings({"unused", "UnusedReturnValue", "deprecation", "DeprecatedIsStillUsed"})
@@ -37,8 +40,18 @@ public abstract class Hologram<T extends Hologram<T>> {
     @Getter
     protected Location location;
 
+    /**
+     * Players which will not be automatically added as viewers no matter which render mode
+     */
+    @Getter
+    private final List<Player> blacklistedViewers = new ArrayList<>();
+
     @Getter
     protected boolean dead = true;
+
+    @Getter
+    @Accessors(chain = true)
+    protected boolean glowing = false;
 
     @Getter @Accessors(chain = true)
     protected long updateTaskPeriod = 20L;
@@ -64,6 +77,9 @@ public abstract class Hologram<T extends Hologram<T>> {
     @Getter @Accessors(chain = true)
     protected boolean isInvisible = true;
 
+    @Accessors(chain = true) @Getter
+    protected int glowColor = 0;
+
     @Getter
     protected final String id;
 
@@ -84,7 +100,7 @@ public abstract class Hologram<T extends Hologram<T>> {
      * - NONE: Hologram is not visible to any players
      */
     @Getter
-    protected final RenderMode renderMode;
+    protected RenderMode renderMode;
 
     @Getter
     protected final EntityType entityType;
@@ -104,8 +120,9 @@ public abstract class Hologram<T extends Hologram<T>> {
     protected @Nullable Integer attachedEntityId;
 
     public interface Internal {
-        Hologram<?> spawn(Location location);
+        Hologram<?> spawn(Location location, boolean ignorePitchYaw);
         void kill();
+        void setLocation(Location location);
     }
 
     protected Hologram(String id, EntityType entityType) {
@@ -117,7 +134,7 @@ public abstract class Hologram<T extends Hologram<T>> {
         this.entityType = entityType;
         validateId(id);
         this.entity = new WrapperEntity(entityType);
-        this.id = id.toLowerCase();
+        this.id = id;
         this.entityID = entity.getEntityId();
         this.renderMode = renderMode;
         this.internalAccess = new InternalSetters();
@@ -133,8 +150,8 @@ public abstract class Hologram<T extends Hologram<T>> {
     private class InternalSetters implements Internal {
 
         @Override
-        public Hologram<?> spawn(Location location) {
-            Hologram.this.spawn(location);
+        public Hologram<?> spawn(Location location, boolean ignoreYawPitch) {
+            Hologram.this.spawn(location, ignoreYawPitch);
             return Hologram.this;
         }
 
@@ -142,8 +159,16 @@ public abstract class Hologram<T extends Hologram<T>> {
         public void kill() {
             Hologram.this.kill();
         }
+
+        @Override
+        public void setLocation(Location location) {
+            Hologram.this.setLocation(location);
+        }
     }
 
+    private void setLocation(Location location) {
+        this.location = location;
+    }
 
     /**
      * Updates the set properties for the entity (shows them to the players).
@@ -152,6 +177,22 @@ public abstract class Hologram<T extends Hologram<T>> {
     public T update() {
         this.updateAffectedPlayers();
         this.applyMeta();
+        return self();
+    }
+
+    public T setRenderMode(RenderMode newRenderMode) {
+        if (newRenderMode == null) throw new IllegalArgumentException("RenderMode cannot be null");
+        if (this.renderMode == newRenderMode) return self();
+        BukkitTasks.runTask(() -> {
+            if (this.renderMode == RenderMode.NOT_ATTACHED_PLAYER && attachedEntityId != null) {
+                Player attachedPlayer = getPlayerByEntityId(attachedEntityId);
+                if (attachedPlayer != null) {
+                    addViewer(attachedPlayer);
+                }
+            }
+            this.renderMode = newRenderMode;
+            updateAffectedPlayers();
+        });
         return self();
     }
 
@@ -236,6 +277,7 @@ public abstract class Hologram<T extends Hologram<T>> {
             List<Player> viewersToKeep = world.getPlayers().stream()
                     .filter(Objects::nonNull)
                     .filter(player -> player.isOnline()
+                            && !this.blacklistedViewers.contains(player)
                             && Objects.equals(player.getLocation().getWorld(), world)
                             && player.getLocation().distanceSquared(this.location) <= this.maxPlayerRenderDistanceSquared)
                     .toList();
@@ -265,12 +307,18 @@ public abstract class Hologram<T extends Hologram<T>> {
                 HologramLib.getPlayerManager().sendPacket(player, packet));
     }
 
-    private void spawn(Location location) {
+    private void spawn(Location location, boolean ignorePitchYaw) {
         this.location = location;
-        this.location.setPitch(0);
-        this.location.setYaw(0);
+        if(ignorePitchYaw) {
+            this.location.setPitch(0);
+            this.location.setYaw(0);
+        }
         this.entity.spawn(SpigotConversionUtil.fromBukkitLocation(this.location));
         this.dead = false;
+    }
+
+    private void spawn(Location location) {
+        this.spawn(location, false);
     }
 
     /**
@@ -352,6 +400,24 @@ public abstract class Hologram<T extends Hologram<T>> {
         return result;
     }
 
+    public void show(Player player) {
+        this.addToViewerBlacklist(player);
+        this.addViewer(player);
+    }
+
+    public void hide(Player player) {
+        this.removeFromViewerBlacklist(player);
+        this.removeViewer(player);
+    }
+
+    public void addToViewerBlacklist(Player player) {
+        this.blacklistedViewers.add(player);
+    }
+
+    public void removeFromViewerBlacklist(Player player) {
+        this.blacklistedViewers.remove(player);
+    }
+
     /**
      * Removes all occurrences of the specified element from the given array.
      *
@@ -430,6 +496,38 @@ public abstract class Hologram<T extends Hologram<T>> {
         return self();
     }
 
+    /**
+     * @return yaw & pitch
+     */
+    public Vector2f getRotation() {
+        Quaternionf combined = new Quaternionf(
+                leftRotation.getX(), leftRotation.getY(), leftRotation.getZ(), leftRotation.getW()
+        ).mul(new Quaternionf(
+                rightRotation.getX(), rightRotation.getY(), rightRotation.getZ(), rightRotation.getW()
+        ));
+
+        Vector3f eulerRadians = new Vector3f();
+        combined.getEulerAnglesXYZ(eulerRadians);
+
+        eulerRadians.x = (float) Math.toDegrees(eulerRadians.x);
+        eulerRadians.y = (float) Math.toDegrees(eulerRadians.y);
+        eulerRadians.z = (float) Math.toDegrees(eulerRadians.z);
+
+        return new Vector2f(eulerRadians.y, eulerRadians.x);
+    }
+
+    public T setRotation(float yaw, float pitch) {
+        float yawRadians = (float) Math.toRadians(yaw);
+        float pitchRadians = (float) Math.toRadians(pitch);
+        Quaternionf rotation = new Quaternionf()
+                .rotateY(yawRadians)
+                .rotateX(pitchRadians);
+
+        this.leftRotation = new Quaternion4f(rotation.x, rotation.y, rotation.z, rotation.w);
+        this.rightRotation = new Quaternion4f(0, 0, 0, 1);
+        return self();
+    }
+
     public T setLeftRotation(float x, float y, float z, float w) {
         this.leftRotation = new Quaternion4f(x, y, z, w);
         return self();
@@ -457,6 +555,23 @@ public abstract class Hologram<T extends Hologram<T>> {
         this.rightRotation = new Quaternion4f(rightRotation.x(), rightRotation.y(), rightRotation.z(), rightRotation.w());
         Quaternionf leftRotation = transformation.getLeftRotation();
         this.leftRotation = new Quaternion4f(leftRotation.x(), leftRotation.y(), leftRotation.z(), leftRotation.w());
+        return self();
+    }
+
+    /**
+     * Sets the RGB color for the item's glow effect. (The color can be wrong if server version is below 1.20.5)
+     * Only applies when glowing is set to true.
+     */
+    public T setGlowColor(Color color) {
+        int rgb = color.getRGB();
+        this.glowColor = ((rgb & 0xFF0000) >> 16) |
+                (rgb & 0x00FF00) |
+                ((rgb & 0x0000FF) << 16);
+        return self();
+    }
+
+    public T setGlowing(boolean glowing) {
+        this.glowing = glowing;
         return self();
     }
 
@@ -495,6 +610,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     }
 
     public T addViewer(Player player) {
+        if(this.entity.hasViewer(player.getUniqueId())) return self();
         this.entity.addViewer(player.getUniqueId());
         if (attachedEntityId != null)
             sendPacket(new WrapperPlayServerSetPassengers(

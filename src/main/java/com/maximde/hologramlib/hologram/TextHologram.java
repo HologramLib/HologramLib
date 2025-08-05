@@ -114,6 +114,8 @@ public class TextHologram extends Hologram<TextHologram> {
         copy.backgroundColor = this.backgroundColor;
         copy.seeThroughBlocks = this.seeThroughBlocks;
         copy.alignment = this.alignment;
+        copy.glowing = this.glowing;
+        copy.glowColor = this.glowColor;
         copy.textOpacity = this.textOpacity;
         copy.updateTaskPeriod = this.updateTaskPeriod;
         copy.maxPlayerRenderDistanceSquared = this.maxPlayerRenderDistanceSquared;
@@ -138,8 +140,10 @@ public class TextHologram extends Hologram<TextHologram> {
         meta.setBillboardConstraints(AbstractDisplayMeta.BillboardConstraints.valueOf(this.billboard.name()));
         meta.setLineWidth(this.maxLineWidth);
         meta.setViewRange((float) this.viewRange);
+        meta.setGlowing(this.glowing);
         meta.setBackgroundColor(this.backgroundColor);
         meta.setTextOpacity(this.textOpacity);
+        meta.setGlowColorOverride(this.glowColor);
         meta.setShadow(this.shadow);
         meta.setInvisible(this.isInvisible);
         if(super.brightness > -1) meta.setBrightnessOverride(super.brightness);

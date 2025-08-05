@@ -1,5 +1,7 @@
 package com.maximde.hologramlib.hologram;
 
+import com.maximde.hologramlib.hologram.custom.LeaderboardHologram;
+import com.maximde.hologramlib.hologram.custom.PagedLeaderboard;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.TaskHandle;
@@ -18,8 +20,150 @@ public class HologramManager {
     private final Map<TextHologram, TaskHandle> hologramAnimations = new ConcurrentHashMap<>();
     private final Map<String, Hologram<?>> hologramsMap = new ConcurrentHashMap<>();
     private final Map<Integer, Hologram<?>> entityIdToHologramMap = new ConcurrentHashMap<>();
+    private final Map<String, InteractionBox> interactionBoxesById = new ConcurrentHashMap<>();
+    private final Map<Integer, InteractionBox> interactionBoxesByEntityId = new ConcurrentHashMap<>();
 
     private final PersistenceManager persistenceManager;
+
+    public boolean interactionBoxExists(String id) {
+        return interactionBoxesById.containsKey(id);
+    }
+
+    public boolean interactionBoxExists(int entityId) {
+        return interactionBoxesByEntityId.containsKey(entityId);
+    }
+
+    public Optional<InteractionBox> getInteractionBox(String id) {
+        return Optional.ofNullable(interactionBoxesById.get(id));
+    }
+
+    public Optional<InteractionBox> getInteractionBoxByEntityId(int entityId) {
+        return Optional.ofNullable(interactionBoxesByEntityId.get(entityId));
+    }
+
+    public List<InteractionBox> getInteractionBoxes() {
+        return new ArrayList<>(interactionBoxesById.values());
+    }
+
+    public List<String> getInteractionBoxIds() {
+        return new ArrayList<>(interactionBoxesById.keySet());
+    }
+
+    public InteractionBox spawn(InteractionBox interactionBox, Location location) {
+        return spawn(interactionBox, location, true);
+    }
+
+    public InteractionBox spawn(InteractionBox interactionBox, Location location,
+                                 boolean ignorePitchYaw) {
+
+        register(interactionBox);
+
+        BukkitTasks.runTask(() -> {
+            try {
+                interactionBox.getInternalAccess().spawn(location, ignorePitchYaw).update();
+
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("Error spawning interaction box: " + interactionBox.getId());
+                e.printStackTrace();
+            }
+        });
+
+        return interactionBox;
+    }
+
+    public boolean register(InteractionBox interactionBox) {
+        if (interactionBox == null) return false;
+
+        String id = interactionBox.getId();
+        int entityId = interactionBox.getEntityID();
+
+        if (interactionBoxesById.containsKey(id)) {
+            Bukkit.getLogger().severe("InteractionBox ID conflict: " + id);
+            return false;
+        }
+
+        interactionBoxesById.put(id, interactionBox);
+        interactionBoxesByEntityId.put(entityId, interactionBox);
+        return true;
+    }
+
+    public boolean removeInteractionBox(InteractionBox interactionBox) {
+        return interactionBox != null && removeInteractionBox(interactionBox.getId());
+    }
+
+    public boolean removeInteractionBox(String id) {
+        InteractionBox interactionBox = interactionBoxesById.remove(id);
+        if (interactionBox == null) return false;
+
+        int entityId = interactionBox.getEntityID();
+        interactionBoxesByEntityId.remove(entityId);
+
+        interactionBox.getInternalAccess().kill();
+
+
+        return true;
+    }
+
+    public void removeAllInteractionBoxes() {
+        interactionBoxesById.values().forEach(box -> {
+            box.getInternalAccess().kill();
+        });
+
+        interactionBoxesById.clear();
+        interactionBoxesByEntityId.clear();
+    }
+
+    /**
+     * Spawns a PagedLeaderboard at the specified location with persistence option
+     */
+    public PagedLeaderboard spawn(PagedLeaderboard pagedLeaderboard, Location location) {
+        for (LeaderboardHologram page : pagedLeaderboard.getPages()) {
+            page.setFixedRotation();
+            spawn(page, location);
+        }
+
+        spawn(pagedLeaderboard.getLeftArrow(), location);
+        spawn(pagedLeaderboard.getRightArrow(), location);
+
+        spawn(pagedLeaderboard.getLeftInteraction(), location);
+        spawn(pagedLeaderboard.getRightInteraction(), location);
+
+        BukkitTasks.runTask(() -> {
+            try {
+                pagedLeaderboard.init(location);
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("Error spawning PagedLeaderboard with id: " + pagedLeaderboard.getBaseId());
+                e.printStackTrace();
+            }
+        });
+
+        return pagedLeaderboard;
+    }
+
+
+    /**
+     * Removes a PagedLeaderboard and all its components with persistence option
+     */
+    public boolean remove(PagedLeaderboard pagedLeaderboard) {
+        if (pagedLeaderboard == null || !pagedLeaderboard.isSpawned()) {
+            return false;
+        }
+
+        boolean success = true;
+
+        for (LeaderboardHologram page : pagedLeaderboard.getPages()) {
+            success &= remove(page);
+        }
+
+        success &= remove(pagedLeaderboard.getLeftArrow());
+        success &= remove(pagedLeaderboard.getRightArrow());
+
+        success &= removeInteractionBox(pagedLeaderboard.getLeftInteraction());
+        success &= removeInteractionBox(pagedLeaderboard.getRightInteraction());
+
+        return success;
+    }
+
 
     @Deprecated
     public Map<String, Hologram<?>> getHologramsMap() {
@@ -55,47 +199,41 @@ public class HologramManager {
         return Optional.ofNullable(entityIdToHologramMap.get(entityId));
     }
 
-    public LeaderboardHologram generateLeaderboard(Location location, Map<Integer, String> leaderboardData, boolean persistant) {
-        return generateLeaderboard(location, leaderboardData, LeaderboardHologram.LeaderboardOptions.builder().build(), persistant);
+    public void spawn(LeaderboardHologram leaderboardHologram, Location location) {
+        spawn(leaderboardHologram, location, false, true);
     }
 
-    public LeaderboardHologram generateLeaderboard(Location location, Map<Integer, String> leaderboardData) {
-        return generateLeaderboard(location, leaderboardData, LeaderboardHologram.LeaderboardOptions.builder().build(), false);
-    }
+    public void spawn(LeaderboardHologram leaderboardHologram, Location location, boolean persistant, boolean ignorePitchYaw) {
+        leaderboardHologram.teleport(location);
+        for (TextHologram textHologram : leaderboardHologram.getAllTextHolograms()) {
+            spawn(textHologram, textHologram.getLocation(), persistant, ignorePitchYaw);
+        }
 
-    public LeaderboardHologram generateLeaderboard(Location location, Map<Integer, String> leaderboardData, LeaderboardHologram.LeaderboardOptions options) {
-        return generateLeaderboard(location, leaderboardData, options, false);
-    }
-
-    public LeaderboardHologram generateLeaderboard(Location location, Map<Integer, String> leaderboardData, LeaderboardHologram.LeaderboardOptions options, boolean persistant) {
-        LeaderboardHologram leaderboardHologram = new LeaderboardHologram(options);
-        updateLeaderboard(leaderboardHologram, leaderboardData, options);
-        spawnElements(leaderboardHologram, location, persistant);
-        return leaderboardHologram;
-    }
-
-    private void spawnElements(LeaderboardHologram leaderboardHologram, Location location, boolean persistant) {
-        spawn(leaderboardHologram.getTextHologram(), location, persistant);
-        spawn(leaderboardHologram.getFirstPlaceHead(), location, persistant);
-    }
-    public void updateLeaderboard(LeaderboardHologram leaderboardHologram, Map<Integer, String> leaderboardData, LeaderboardHologram.LeaderboardOptions options) {
-        leaderboardHologram.updateLeaderboard(leaderboardData, options);
+        if (leaderboardHologram.getFirstPlaceHead() != null) {
+            spawn(leaderboardHologram.getFirstPlaceHead(), leaderboardHologram.getFirstPlaceHead().getLocation(), persistant, ignorePitchYaw);
+        }
     }
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location) {
         this.register(hologram);
-        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location).update());
+        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location, false).update());
 
         return hologram;
     }
 
-    public <H extends Hologram<H>> H spawn(H hologram, Location location, boolean persistent) {
+    public <H extends Hologram<H>> H spawn(H hologram, Location location, boolean persistent, boolean ignorePitchYaw) {
         this.register(hologram);
         BukkitTasks.runTask(() -> {
-            hologram.getInternalAccess().spawn(location).update();
-            if (persistent && persistenceManager != null) {
-                persistenceManager.saveHologram(hologram);
+            try {
+                hologram.getInternalAccess().spawn(location, ignorePitchYaw).update();
+                if (persistent && persistenceManager != null) {
+                    persistenceManager.saveHologram(hologram);
+                }
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("An error occurred while trying to spawn hologram with id: " + hologram.id);
+                e.printStackTrace();
             }
+
         });
         return hologram;
     }
@@ -175,8 +313,17 @@ public class HologramManager {
     }
 
     public boolean remove(LeaderboardHologram leaderboardHologram, boolean removePersistence) {
-        return remove(leaderboardHologram.getTextHologram(), removePersistence) &&
-            remove(leaderboardHologram.getFirstPlaceHead(), removePersistence);
+        boolean success = true;
+
+        for (TextHologram textHologram : leaderboardHologram.getAllTextHolograms()) {
+            success &= remove(textHologram, removePersistence);
+        }
+
+        if (leaderboardHologram.getFirstPlaceHead() != null) {
+            success &= remove(leaderboardHologram.getFirstPlaceHead(), removePersistence);
+        }
+
+        return success;
     }
 
     public boolean remove(LeaderboardHologram leaderboardHologram) {
@@ -219,7 +366,7 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source, String id, boolean persistent) {
-        return this.spawn(source.copy(id), source.getLocation(), persistent);
+        return this.spawn(source.copy(id), source.getLocation(), persistent, false);
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source) {
@@ -227,7 +374,7 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source, boolean persistent) {
-        return this.spawn(source.copy(), source.getLocation(), persistent);
+        return this.spawn(source.copy(), source.getLocation(), persistent, false);
     }
 
     /**
