@@ -13,7 +13,9 @@ import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.ApiStatus;
+import org.joml.Vector3d;
 
 import java.util.*;
 import java.util.List;
@@ -34,6 +36,8 @@ public class LeaderboardHologram {
     private int leaderboardEntries = 0;
     private Map<UUID, PlayerScore> playerData = new HashMap<>();
     private Location baseLocation;
+
+    private float xRotation = 0;
 
     public enum LeaderboardType {
         SIMPLE_TEXT,
@@ -213,6 +217,7 @@ public class LeaderboardHologram {
             allTextHologram.hide(player);
         }
         this.backgroundHologram.hide(player);
+        if(this.firstPlaceHead != null) this.firstPlaceHead.hide(player);
     }
 
     public void show(Player player) {
@@ -220,6 +225,7 @@ public class LeaderboardHologram {
         for (TextHologram allTextHologram : this.allTextHolograms) {
             allTextHologram.show(player);
         }
+        if(this.firstPlaceHead != null) this.firstPlaceHead.show(player);
     }
 
     /**
@@ -305,15 +311,32 @@ public class LeaderboardHologram {
         }
     }
 
+
+
     private void updateBackgroundHologram(double currentY) {
         float totalHeight = (float) (currentY + 0.8) * 4;
         float bgWidth = options.backgroundWidth * scale;
         float bgHeight = totalHeight * scale;
-        backgroundHologram.setTranslation(-0.5F, (float) -options.lineHeight(), 0);
+
+        float offsetX = 0;
+        float offsetZ = 0;
+
+        if (Math.abs(this.xRotation - 90) <= 10) {
+            offsetZ = 0.5F;
+        } else if (Math.abs(this.xRotation  - 180) <= 10) {
+            offsetX = 0.5F;
+        } else if (Math.abs(this.xRotation  + 90) <= 10) {
+            offsetZ = -0.5F;
+        } else {
+            offsetX = -0.5F;
+        }
+
+        backgroundHologram.setTranslation(offsetX, (float) -options.lineHeight(), offsetZ);
         backgroundHologram.setScale(bgWidth, bgHeight, 1f);
         backgroundHologram.teleport(baseLocation);
         backgroundHologram.update();
     }
+
 
     private float calculateTotalHeight() {
         float offset = options.showEmptyPlaces() ? options.maxDisplayEntries() : Math.min(leaderboardEntries, options.maxDisplayEntries()) + 4;
@@ -390,6 +413,7 @@ public class LeaderboardHologram {
 
     @ApiStatus.Experimental
     public LeaderboardHologram rotate(float x, float y) {
+        this.xRotation = x;
         for (TextHologram hologram : allTextHolograms) {
             hologram.setRotation(x, y).update();
         }
@@ -400,6 +424,7 @@ public class LeaderboardHologram {
     }
 
     public LeaderboardHologram setFixedRotation() {
+        options.rotationMode(RotationMode.FIXED);
         for (TextHologram hologram : allTextHolograms) {
             hologram.setBillboard(Display.Billboard.FIXED);
         }

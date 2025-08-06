@@ -4,6 +4,7 @@ import com.maximde.hologramlib.hologram.InteractionBox;
 import com.maximde.hologramlib.hologram.TextHologram;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Display;
@@ -138,17 +139,19 @@ public class PagedLeaderboard {
         showInitialPage();
     }
 
-    /**
-     * Compute a world-space offset from baseLocation so that
-     * +offset sits to the right of the forward direction, and
-     * –offset sits to the left.
-     */
     private Location computeArrowLocation(double offset) {
-        float yawDeg = pages.get(0).getHeaderHologram().getRotation().x;
+        float yawDeg = pages.get(0).getXRotation();
+
+        float threshold = 10f;
+
+        if (Math.abs(yawDeg - 180) < threshold || Math.abs(yawDeg + 180) < threshold) {
+            offset = -offset;
+        }
+
         double yawRad = Math.toRadians(yawDeg);
 
         double dx =  Math.cos(yawRad) * offset;
-        double dz =  Math.sin(yawRad) * offset;
+        double dz = -Math.sin(yawRad) * offset;
 
         return baseLocation.clone().add(dx, arrowHeight, dz);
     }

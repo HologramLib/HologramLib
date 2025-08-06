@@ -402,11 +402,19 @@ public abstract class Hologram<T extends Hologram<T>> {
         return result;
     }
 
+    /**
+     * Ignores render mode
+     * @param player
+     */
     public void show(Player player) {
         this.removeFromViewerBlacklist(player);
         this.addViewer(player);
     }
 
+    /**
+     * Ignores render mode
+     * @param player
+     */
     public void hide(Player player) {
         this.addToViewerBlacklist(player);
         this.removeViewer(player);
