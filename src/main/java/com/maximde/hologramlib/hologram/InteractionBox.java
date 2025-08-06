@@ -148,12 +148,12 @@ public class InteractionBox {
     }
 
     public void show(Player player) {
-        this.addToViewerBlacklist(player);
+        this.removeFromViewerBlacklist(player);
         this.addViewer(player);
     }
 
     public void hide(Player player) {
-        this.removeFromViewerBlacklist(player);
+        this.addToViewerBlacklist(player);
         this.removeViewer(player);
     }
 

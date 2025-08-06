@@ -298,8 +298,8 @@ public abstract class Hologram<T extends Hologram<T>> {
 
             viewersToRemove.forEach(this.entity::removeViewer);
             this.addAllViewers(viewersToKeep);
-        }
 
+        }
     }
 
     protected void sendPacket(PacketWrapper<?> packet, List<Player> players) {
@@ -403,12 +403,12 @@ public abstract class Hologram<T extends Hologram<T>> {
     }
 
     public void show(Player player) {
-        this.addToViewerBlacklist(player);
+        this.removeFromViewerBlacklist(player);
         this.addViewer(player);
     }
 
     public void hide(Player player) {
-        this.removeFromViewerBlacklist(player);
+        this.addToViewerBlacklist(player);
         this.removeViewer(player);
     }
 

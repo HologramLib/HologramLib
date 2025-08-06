@@ -14,7 +14,6 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.jetbrains.annotations.ApiStatus;
-import org.joml.Vector2f;
 
 import java.util.*;
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.logging.Level;
 
 @Getter
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-@ApiStatus.Experimental
 public class LeaderboardHologram {
 
     private final String baseId;
@@ -40,6 +38,7 @@ public class LeaderboardHologram {
     public enum LeaderboardType {
         SIMPLE_TEXT,
         TOP_PLAYER_HEAD,
+        @ApiStatus.Experimental
         ALL_PLAYER_HEADS
     }
 
@@ -49,6 +48,7 @@ public class LeaderboardHologram {
     }
 
     public enum HeadMode {
+        @ApiStatus.Experimental
         RESOURCEPACK,
         ITEM_DISPLAY
     }
@@ -116,6 +116,9 @@ public class LeaderboardHologram {
 
         @Builder.Default
         private boolean background = true;
+
+        @Builder.Default
+        private boolean decimalNumbers = false;
 
         @Builder.Default
         private int backgroundColor = 0x66000000;
@@ -213,10 +216,10 @@ public class LeaderboardHologram {
     }
 
     public void show(Player player) {
+        this.backgroundHologram.show(player);
         for (TextHologram allTextHologram : this.allTextHolograms) {
             allTextHologram.show(player);
         }
-        this.backgroundHologram.show(player);
     }
 
     /**
@@ -366,7 +369,7 @@ public class LeaderboardHologram {
         String formattedEntry = placeFormat
                 .replace("{place}", String.valueOf(place))
                 .replace("{name}", playerScore.name())
-                .replace("{score}", String.valueOf(playerScore.score()))
+                .replace("{score}", String.valueOf(options.decimalNumbers ? playerScore.score() : ((long) playerScore.score())))
                 .replace("{suffix}", options.suffix())
                 .replace("{extra}", options.extra().getOrDefault(uuid, ""))
                 .replace("{head}", headText);
@@ -385,6 +388,7 @@ public class LeaderboardHologram {
                 .replace("{head}", "");
     }
 
+    @ApiStatus.Experimental
     public LeaderboardHologram rotate(float x, float y) {
         for (TextHologram hologram : allTextHolograms) {
             hologram.setRotation(x, y).update();

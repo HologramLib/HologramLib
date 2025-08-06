@@ -9,7 +9,6 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
-import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +40,28 @@ public class PagedLeaderboard {
     private String rightArrowText = "<gold>▶</gold>";
     private Vector3F interactionBoxSize = new Vector3F(0.7F, 1, 0);
 
+    @Getter
+    private Sound leftClickSound = Sound.BLOCK_HONEY_BLOCK_BREAK;
+    @Getter
+    private Sound rightClickSound = Sound.BLOCK_HONEY_BLOCK_BREAK;
+    @Getter
+    private float leftClickVolume = 1.0F;
+    @Getter
+    private float rightClickVolume = 1.0F;
+    @Getter
+    private float leftClickPitch = 1.0F;
+    @Getter
+    private float rightClickPitch = 1.0F;
+
+    @Getter
+    private int leftArrowBackground = 0;
+    @Getter
+    private int rightArrowBackground = 0;
+    @Getter
+    private Vector3F leftArrowScale = new Vector3F(4, 5, 1);
+    @Getter
+    private Vector3F rightArrowScale = new Vector3F(4, 5, 1);
+
     public PagedLeaderboard(String baseId) {
         validateId(baseId);
         this.baseId = baseId;
@@ -56,14 +77,15 @@ public class PagedLeaderboard {
     private void initializeArrows() {
         leftArrow = new TextHologram(baseId + "_left_arrow");
         leftArrow.setMiniMessageText(leftArrowText)
-                .setScale(4, 5, 1)
+                .setScale(leftArrowScale.x, leftArrowScale.y, leftArrowScale.z)
+                .setBackgroundColor(leftArrowBackground)
                 .setBillboard(Display.Billboard.FIXED);
 
         rightArrow = new TextHologram(baseId + "_right_arrow");
         rightArrow.setMiniMessageText(rightArrowText)
-                .setScale(4, 5, 1)
+                .setScale(rightArrowScale.x, rightArrowScale.y, rightArrowScale.z)
+                .setBackgroundColor(rightArrowBackground)
                 .setBillboard(Display.Billboard.FIXED);
-
 
         leftInteraction = new InteractionBox(baseId + "_left_interact", this::previousPage);
         leftInteraction.setSize(interactionBoxSize)
@@ -143,10 +165,10 @@ public class PagedLeaderboard {
                 }
             }
 
-            LeaderboardHologram firstPage = pages.get(0);
+
             for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
-                firstPage.show(player);
                 playerCurrentPage.put(player.getUniqueId(), 0);
+                pages.get(0).show(player);
             }
         }
     }
@@ -162,7 +184,7 @@ public class PagedLeaderboard {
         int nextPage = (currentPage + 1) % pages.size();
 
         switchToPage(player, nextPage);
-        player.playSound(rightInteraction.getLocation(), Sound.BLOCK_HONEY_BLOCK_BREAK, 1F, 1F);
+        player.playSound(rightInteraction.getLocation(), rightClickSound, rightClickVolume, rightClickPitch);
     }
 
     /**
@@ -176,7 +198,47 @@ public class PagedLeaderboard {
         int prevPage = (currentPage - 1 + pages.size()) % pages.size();
 
         switchToPage(player, prevPage);
-        player.playSound(leftInteraction.getLocation(), Sound.BLOCK_HONEY_BLOCK_BREAK, 1F, 1F);
+        player.playSound(leftInteraction.getLocation(), leftClickSound, leftClickVolume, leftClickPitch);
+    }
+
+    public PagedLeaderboard setLeftClickSound(Sound sound) {
+        this.leftClickSound = sound;
+        return this;
+    }
+
+    public PagedLeaderboard setRightClickSound(Sound sound) {
+        this.rightClickSound = sound;
+        return this;
+    }
+
+    public PagedLeaderboard setLeftClickSound(Sound sound, float volume, float pitch) {
+        this.leftClickSound = sound;
+        this.leftClickVolume = volume;
+        this.leftClickPitch = pitch;
+        return this;
+    }
+
+    public PagedLeaderboard setRightClickSound(Sound sound, float volume, float pitch) {
+        this.rightClickSound = sound;
+        this.rightClickVolume = volume;
+        this.rightClickPitch = pitch;
+        return this;
+    }
+
+    public PagedLeaderboard setClickSounds(Sound leftSound, Sound rightSound) {
+        this.leftClickSound = leftSound;
+        this.rightClickSound = rightSound;
+        return this;
+    }
+
+    public PagedLeaderboard setClickSounds(Sound leftSound, Sound rightSound, float volume, float pitch) {
+        this.leftClickSound = leftSound;
+        this.rightClickSound = rightSound;
+        this.leftClickVolume = volume;
+        this.rightClickVolume = volume;
+        this.leftClickPitch = pitch;
+        this.rightClickPitch = pitch;
+        return this;
     }
 
     /**
@@ -342,6 +404,74 @@ public class PagedLeaderboard {
 
     public Location getLocation() {
         return baseLocation != null ? baseLocation.clone() : null;
+    }
+
+    public PagedLeaderboard setArrowBackgrounds(int backgroundColor) {
+        this.leftArrowBackground = backgroundColor;
+        this.rightArrowBackground = backgroundColor;
+        if (leftArrow != null) {
+            leftArrow.setBackgroundColor(backgroundColor).update();
+        }
+        if (rightArrow != null) {
+            rightArrow.setBackgroundColor(backgroundColor).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setLeftArrowBackground(int backgroundColor) {
+        this.leftArrowBackground = backgroundColor;
+        if (leftArrow != null) {
+            leftArrow.setBackgroundColor(backgroundColor).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setRightArrowBackground(int backgroundColor) {
+        this.rightArrowBackground = backgroundColor;
+        if (rightArrow != null) {
+            rightArrow.setBackgroundColor(backgroundColor).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setArrowScale(Vector3F scale) {
+        this.leftArrowScale = scale;
+        this.rightArrowScale = scale;
+        if (leftArrow != null) {
+            leftArrow.setScale(scale.x, scale.y, scale.z).update();
+        }
+        if (rightArrow != null) {
+            rightArrow.setScale(scale.x, scale.y, scale.z).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setArrowScale(float x, float y, float z) {
+        return setArrowScale(new Vector3F(x, y, z));
+    }
+
+    public PagedLeaderboard setLeftArrowScale(Vector3F scale) {
+        this.leftArrowScale = scale;
+        if (leftArrow != null) {
+            leftArrow.setScale(scale.x, scale.y, scale.z).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setLeftArrowScale(float x, float y, float z) {
+        return setLeftArrowScale(new Vector3F(x, y, z));
+    }
+
+    public PagedLeaderboard setRightArrowScale(Vector3F scale) {
+        this.rightArrowScale = scale;
+        if (rightArrow != null) {
+            rightArrow.setScale(scale.x, scale.y, scale.z).update();
+        }
+        return this;
+    }
+
+    public PagedLeaderboard setRightArrowScale(float x, float y, float z) {
+        return setRightArrowScale(new Vector3F(x, y, z));
     }
 
 }
