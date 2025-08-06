@@ -273,13 +273,15 @@ public abstract class Hologram<T extends Hologram<T>> {
 
         World world = this.location.getWorld();
 
-        if (world != null && (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY || this.renderMode == RenderMode.NOT_ATTACHED_PLAYER)) {
-            List<Player> viewersToKeep = world.getPlayers().stream()
+        if (world != null &&  (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY || this.renderMode == RenderMode.NOT_ATTACHED_PLAYER)) {
+            List<Player> viewersToKeep = new ArrayList<>(world.getPlayers()).stream()
                     .filter(Objects::nonNull)
-                    .filter(player -> player.isOnline()
-                            && !this.blacklistedViewers.contains(player)
-                            && Objects.equals(player.getLocation().getWorld(), world)
-                            && player.getLocation().distanceSquared(this.location) <= this.maxPlayerRenderDistanceSquared)
+                    .filter(player ->
+                            player.isOnline() &&
+                                    !this.blacklistedViewers.contains(player) &&
+                                    Objects.equals(player.getLocation().getWorld(), world) &&
+                                    player.getLocation().distanceSquared(this.location) <= this.maxPlayerRenderDistanceSquared
+                    )
                     .toList();
 
             if (this.renderMode == RenderMode.NOT_ATTACHED_PLAYER && attachedEntityId != null) {
