@@ -107,10 +107,10 @@ manager.spawn(hologram);
 ## 👁️ Roadmap & Vision
 **2025**  
 - Particle-effect holograms
-- Interactive holograms
+- ~~Interactive holograms~~
 - Improved animation system
 - ~~Persistant holograms~~
-- PlaceholderAPI
+- ~~PlaceholderAPI~~
 
 > [!WARNING]
 > Persistant holograms & the addon system are still experimental features
