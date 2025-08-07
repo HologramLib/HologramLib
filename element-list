@@ -1,5 +1,8 @@
 com.maximde.hologramlib
 com.maximde.hologramlib.bstats
 com.maximde.hologramlib.hologram
+com.maximde.hologramlib.hologram.custom
+com.maximde.hologramlib.hook
+com.maximde.hologramlib.listener
 com.maximde.hologramlib.persistence
 com.maximde.hologramlib.utils
