@@ -2,14 +2,19 @@ package com.maximde.hologramlib;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
 import com.maximde.hologramlib.hook.PlaceholderAPIHook;
+import com.maximde.hologramlib.listener.InteractionPacketListener;
+import com.maximde.hologramlib.listener.PlayerJoinListener;
+import com.maximde.hologramlib.listener.PlayerQuitListener;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
+import com.maximde.hologramlib.utils.PlayerUtils;
 import com.maximde.hologramlib.utils.ReplaceText;
 import com.maximjsx.addonlib.core.AddonLib;
 import com.maximjsx.addonlib.util.Logger;
@@ -67,7 +72,6 @@ public abstract class HologramLib {
                         PacketEvents::setAPI,
                         () -> plugin.getLogger().severe("Failed to build PacketEvents API")
                 );
-
         PacketEvents.getAPI().load();
     }
 
@@ -115,6 +119,7 @@ public abstract class HologramLib {
             initializeManagers();
             initializeMetrics();
             initializeReplaceText();
+            PlayerUtils.loadPlaceholders();
 
             FoliaLib foliaLib = new FoliaLib(plugin);
             BukkitTasks.setPlugin(plugin);
@@ -122,6 +127,12 @@ public abstract class HologramLib {
 
             persistenceManager = new PersistenceManager();
             hologramManager = new HologramManager(persistenceManager);
+            PacketEvents.getAPI().getEventManager().registerListener(new InteractionPacketListener(hologramManager),
+                    PacketListenerPriority.LOW);
+
+            plugin.getServer().getPluginManager().registerEvents(new PlayerJoinListener(hologramManager), plugin);
+            plugin.getServer().getPluginManager().registerEvents(new PlayerQuitListener(hologramManager), plugin);
+
             persistenceManager.loadHolograms();
 
             PluginManager pluginManager = Bukkit.getPluginManager();
@@ -153,6 +164,7 @@ public abstract class HologramLib {
         try {
             savePersistentHolograms();
             hologramManager.removeAll();
+            hologramManager.removeAllInteractionBoxes();
         } catch (Exception e) {
             e.printStackTrace();
         }

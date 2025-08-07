@@ -1,10 +1,10 @@
 package com.maximde.hologramlib.persistence;
 
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
-import com.github.retrooper.packetevents.protocol.item.type.ItemType;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.hologram.*;
+import com.maximde.hologramlib.hologram.custom.LeaderboardHologram;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -72,19 +72,17 @@ public class PersistenceManager {
     }
 
     public void saveLeaderboard(LeaderboardHologram leaderboard) {
-        String id = leaderboard.getTextHologram().getId();
+        String id = leaderboard.getAllTextHolograms().get(0).getId();
         persistentLeaderboards.add(id);
 
-        saveHologram(leaderboard.getTextHologram());
+        saveHologram(leaderboard.getAllTextHolograms().get(0));
         saveHologram(leaderboard.getFirstPlaceHead());
 
-        config.set("leaderboards." + id + ".textHologramId", leaderboard.getTextHologram().getId());
+        config.set("leaderboards." + id + ".textHologramId", leaderboard.getAllTextHolograms().get(0).getId());
         config.set("leaderboards." + id + ".headHologramId", leaderboard.getFirstPlaceHead().getId());
 
         LeaderboardHologram.LeaderboardOptions options = leaderboard.getOptions();
         config.set("leaderboards." + id + ".options.title", options.title());
-        config.set("leaderboards." + id + ".options.scale", options.scale());
-        config.set("leaderboards." + id + ".options.topPlayerHead", options.topPlayerHead());
         config.set("leaderboards." + id + ".options.showEmptyPlaces", options.showEmptyPlaces());
         config.set("leaderboards." + id + ".options.maxDisplayEntries", options.maxDisplayEntries());
         config.set("leaderboards." + id + ".options.suffix", options.suffix());
@@ -253,7 +251,7 @@ public class PersistenceManager {
                 (byte) config.getInt(path + ".textOpacity") : (byte) -1);
 
         applyCommonProperties(hologram, path);
-        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
+        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true, false));
     }
 
     private void loadItemHologram(String id, RenderMode renderMode, Location location, String path) {
@@ -271,7 +269,7 @@ public class PersistenceManager {
         hologram.setItem(ItemStack.builder().type(Objects.requireNonNull(ItemTypes.getByName(config.getString(path + ".item.type", "air").toLowerCase()))).build());
 
         applyCommonProperties(hologram, path);
-        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
+        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true, false));
     }
 
     private void loadBlockHologram(String id, RenderMode renderMode, Location location, String path) {
@@ -285,7 +283,7 @@ public class PersistenceManager {
         hologram.setGlowColor(color);
 
         applyCommonProperties(hologram, path);
-        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true));
+        HologramLib.getManager().ifPresent(manager -> manager.spawn(hologram, location, true, false));
     }
 
     private void loadLeaderboard(String id) {
@@ -309,8 +307,6 @@ public class PersistenceManager {
                 LeaderboardHologram.LeaderboardOptions.builder();
 
         optionsBuilder.title(config.getString(path + ".options.title", "Leaderboard"));
-        optionsBuilder.scale((float) config.getDouble(path + ".options.scale", 1.0));
-        optionsBuilder.topPlayerHead(config.getBoolean(path + ".options.topPlayerHead", true));
         optionsBuilder.showEmptyPlaces(config.getBoolean(path + ".options.showEmptyPlaces", false));
         optionsBuilder.maxDisplayEntries(config.getInt(path + ".options.maxDisplayEntries", 10));
         optionsBuilder.suffix(config.getString(path + ".options.suffix", ""));
@@ -335,7 +331,7 @@ public class PersistenceManager {
 
 
         try {
-            LeaderboardHologram leaderboard = new LeaderboardHologram(options);
+            LeaderboardHologram leaderboard = new LeaderboardHologram(options, "leaderboard");
 
             java.lang.reflect.Field textHologramField = LeaderboardHologram.class.getDeclaredField("textHologram");
             java.lang.reflect.Field firstPlaceHeadField = LeaderboardHologram.class.getDeclaredField("firstPlaceHead");
@@ -346,8 +342,7 @@ public class PersistenceManager {
             textHologramField.set(leaderboard, textHologram);
             firstPlaceHeadField.set(leaderboard, headHologram);
 
-            Map<Integer, String> emptyData = new HashMap<>();
-            leaderboard.updateLeaderboard(emptyData, options);
+            leaderboard.update();
 
         } catch (Exception e) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to reconstruct leaderboard: " + id, e);

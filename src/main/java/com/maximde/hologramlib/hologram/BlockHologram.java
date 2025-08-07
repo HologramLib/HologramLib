@@ -11,7 +11,6 @@ import me.tofaa.entitylib.meta.display.AbstractDisplayMeta;
 import me.tofaa.entitylib.meta.display.BlockDisplayMeta;
 import org.joml.Vector3f;
 
-import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -26,13 +25,6 @@ public class BlockHologram extends Hologram<BlockHologram> {
     @Setter
     @Accessors(chain = true)
     protected boolean onFire = false;
-
-    @Setter
-    @Accessors(chain = true)
-    protected boolean glowing = false;
-
-    @Accessors(chain = true)
-    protected int glowColor = Color.YELLOW.getRGB();
 
     public BlockHologram(String id) {
         this(id, RenderMode.ALL);
@@ -65,18 +57,6 @@ public class BlockHologram extends Hologram<BlockHologram> {
         meta.setGlowing(this.glowing);
         meta.setGlowColorOverride(this.glowColor);
         return meta;
-    }
-
-    /**
-     * Sets the RGB color for the item's glow effect. (The color can be wrong if server version is below 1.20.5)
-     * Only applies when glowing is set to true.
-     */
-    public BlockHologram setGlowColor(Color color) {
-        int rgb = color.getRGB();
-        this.glowColor = ((rgb & 0xFF0000) >> 16) |
-                (rgb & 0x00FF00) |
-                ((rgb & 0x0000FF) << 16);
-        return this;
     }
 
 

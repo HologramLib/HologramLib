@@ -1,20 +1,28 @@
 package com.maximde.hologramlib.hologram;
 
 
+import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemProfile;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.util.Quaternion4f;
+import com.maximde.hologramlib.utils.PlayerUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.tofaa.entitylib.meta.EntityMeta;
 import me.tofaa.entitylib.meta.display.AbstractDisplayMeta;
 import me.tofaa.entitylib.meta.display.ItemDisplayMeta;
+import org.bukkit.Bukkit;
 import org.joml.Vector3f;
 
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -35,16 +43,6 @@ public class ItemHologram extends Hologram<ItemHologram> {
     protected ItemStack item = new ItemStack.Builder()
             .type(ItemTypes.IRON_AXE).build();
 
-    @Setter
-    @Accessors(chain = true)
-    protected boolean glowing = false;
-
-    /**
-     * Only visible if 'ItemHologram#glowing' is set to true
-     */
-    @Accessors(chain = true)
-    protected int glowColor = 0;
-
 
 
     public ItemHologram(String id, RenderMode renderMode) {
@@ -53,18 +51,6 @@ public class ItemHologram extends Hologram<ItemHologram> {
 
     public ItemHologram(String id) {
         this(id, RenderMode.ALL);
-    }
-
-    /**
-     * Sets the RGB color for the item's glow effect. (The color can be wrong if server version is below 1.20.5)
-     * Only applies when glowing is set to true.
-     */
-    public ItemHologram setGlowColor(Color color) {
-        int rgb = color.getRGB();
-        this.glowColor = ((rgb & 0xFF0000) >> 16) |
-                (rgb & 0x00FF00) |
-                ((rgb & 0x0000FF) << 16);
-        return this;
     }
 
 
@@ -90,6 +76,33 @@ public class ItemHologram extends Hologram<ItemHologram> {
         return meta;
     }
 
+    /**
+     * Sets the item to a player head using the given UUID.
+     * The head will automatically glow and be scaled to fit a hologram display.
+     * @param uuid The UUID of the player whose skin to use.
+     * @return this (for chaining)
+     */
+    public ItemHologram setPlayerHead(UUID uuid) {
+        try {
+            List<ItemProfile.Property> properties = new ArrayList<>();
+            String textureJson = "{\"textures\":{\"SKIN\":{\"url\":\"" + PlayerUtils.getPlayerSkinUrl(uuid) + "\"}}}";
+            String base64Texture = Base64.getEncoder().encodeToString(textureJson.getBytes());
+
+            properties.add(new ItemProfile.Property("textures", base64Texture, null));
+
+            ItemProfile profile = new ItemProfile("PlayerHead", uuid, properties);
+
+            this.item = new ItemStack.Builder()
+                    .type(ItemTypes.PLAYER_HEAD)
+                    .component(ComponentTypes.PROFILE, profile)
+                    .build();
+
+            return this;
+        } catch (Exception exception) {
+            Bukkit.getLogger().warning("Failed to set player head in ItemHologram: " + exception.getMessage());
+            return this;
+        }
+    }
 
     @Override
     protected ItemHologram copy() {
