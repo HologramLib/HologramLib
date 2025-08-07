@@ -17,7 +17,7 @@ public enum RenderMode {
      */
     ALL,
     /**
-     * Use RenderMode.ALL instead
+     * Use RenderMode.ALL instead! It does the exact same thing.
      */
     @Deprecated
     NEARBY,

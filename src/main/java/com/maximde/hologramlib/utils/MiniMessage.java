@@ -7,4 +7,8 @@ public class MiniMessage {
     public static Component get(String message) {
         return minimessage.deserialize(message);
     }
+
+    public static String stripTags(String message) {
+        return minimessage.stripTags(message);
+    }
 }

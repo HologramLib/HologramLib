@@ -42,7 +42,7 @@ Entity attachment • Per-player visibility • View distance control
 | **Paper**       | 1.19.4 → 1.21.5 ✔️       |
 | **Purpur**      | 1.19.4 → 1.21.5 ✔️       | 
 | **Folia**       | 1.19.4 → 1.21.5 ✔️       | 
-| **Spigot**      | 1.19.4 → 1.21.5 ✔️       | 
+| **Spigot**      | ❌ Not supported         | 
 | **Bedrock**     | ❌ Not supported         | 
 | **Legacy**      | ❌ (1.8 - 1.19.3)        | 
 
@@ -107,10 +107,10 @@ manager.spawn(hologram);
 ## 👁️ Roadmap & Vision
 **2025**  
 - Particle-effect holograms
-- Interactive holograms
+- ~~Interactive holograms~~
 - Improved animation system
 - ~~Persistant holograms~~
-- PlaceholderAPI
+- ~~PlaceholderAPI~~
 
 > [!WARNING]
 > Persistant holograms & the addon system are still experimental features
@@ -143,7 +143,7 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
-  <sub>Used by 70+ servers | 4,000+ downloads across platforms</sub><br>
+  <sub>Used by 80+ servers | 6,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •
