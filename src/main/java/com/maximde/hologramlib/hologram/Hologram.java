@@ -507,7 +507,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     }
 
     /**
-     * @return yaw & pitch
+     * @return yaw and pitch
      */
     public Vector2f getRotation() {
         Quaternionf combined = new Quaternionf(
