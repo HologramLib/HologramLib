@@ -154,6 +154,7 @@ public class HologramManager {
             try {
                 pagedLeaderboard.init(location);
             } catch (Exception e) {
+                removeEventHandler(pagedLeaderboard);
                 Bukkit.getLogger().warning("Error spawning PagedLeaderboard with id: " + pagedLeaderboard.getBaseId());
                 e.printStackTrace();
             }

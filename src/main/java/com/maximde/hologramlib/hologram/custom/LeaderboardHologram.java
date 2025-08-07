@@ -75,7 +75,7 @@ public class LeaderboardHologram {
     public static class LeaderboardOptions {
 
         @Builder.Default
-        public float backgroundWidth = 40f;
+        private float backgroundWidth = 40f;
 
         @Builder.Default
         private String title = "Leaderboard";
