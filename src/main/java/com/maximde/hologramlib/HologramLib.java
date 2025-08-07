@@ -9,9 +9,12 @@ import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
 import com.maximde.hologramlib.hook.PlaceholderAPIHook;
 import com.maximde.hologramlib.listener.InteractionPacketListener;
+import com.maximde.hologramlib.listener.PlayerJoinListener;
+import com.maximde.hologramlib.listener.PlayerQuitListener;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
+import com.maximde.hologramlib.utils.PlayerUtils;
 import com.maximde.hologramlib.utils.ReplaceText;
 import com.maximjsx.addonlib.core.AddonLib;
 import com.maximjsx.addonlib.util.Logger;
@@ -23,7 +26,6 @@ import me.tofaa.entitylib.EntityLib;
 import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
-import org.bukkit.entity.Interaction;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -117,6 +119,7 @@ public abstract class HologramLib {
             initializeManagers();
             initializeMetrics();
             initializeReplaceText();
+            PlayerUtils.loadPlaceholders();
 
             FoliaLib foliaLib = new FoliaLib(plugin);
             BukkitTasks.setPlugin(plugin);
@@ -126,6 +129,10 @@ public abstract class HologramLib {
             hologramManager = new HologramManager(persistenceManager);
             PacketEvents.getAPI().getEventManager().registerListener(new InteractionPacketListener(hologramManager),
                     PacketListenerPriority.LOW);
+
+            plugin.getServer().getPluginManager().registerEvents(new PlayerJoinListener(hologramManager), plugin);
+            plugin.getServer().getPluginManager().registerEvents(new PlayerQuitListener(hologramManager), plugin);
+
             persistenceManager.loadHolograms();
 
             PluginManager pluginManager = Bukkit.getPluginManager();

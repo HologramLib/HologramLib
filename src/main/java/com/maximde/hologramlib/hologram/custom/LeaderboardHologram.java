@@ -13,12 +13,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.ApiStatus;
-import org.joml.Vector3d;
 
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 @Getter
@@ -38,6 +38,11 @@ public class LeaderboardHologram {
     private Location baseLocation;
 
     private float xRotation = 0;
+
+    private final Map<UUID,String> dynamicHeads = new ConcurrentHashMap<>();
+
+    private final List<CompletableFuture<Void>> headFutures = Collections.synchronizedList(new ArrayList<>());
+
 
     public enum LeaderboardType {
         SIMPLE_TEXT,
@@ -125,7 +130,7 @@ public class LeaderboardHologram {
         private boolean decimalNumbers = false;
 
         @Builder.Default
-        private int backgroundColor = 0x66000000;
+        private int backgroundColor = 0x54000000;
     }
 
     public record PlayerScore(String name, double score) {}
@@ -240,7 +245,8 @@ public class LeaderboardHologram {
         }
 
         this.leaderboardEntries = playerData.size();
-        List<Map.Entry<UUID, PlayerScore>> sorted = getSortedEntries();
+        final List<Map.Entry<UUID, PlayerScore>> sorted = getSortedEntries();
+        final Map<UUID, Integer> playerIndexMap = new ConcurrentHashMap<>();
 
         double currentY = 0;
 
@@ -272,6 +278,7 @@ public class LeaderboardHologram {
             Map.Entry<UUID, PlayerScore> entry = sorted.get(i);
             UUID uuid = entry.getKey();
             PlayerScore playerScore = entry.getValue();
+            playerIndexMap.put(uuid, i);
             String content = getFormattedEntry(place, uuid, playerScore);
             entryHologram.setMiniMessageText(content);
             positionHologram(entryHologram, currentY);
@@ -292,6 +299,41 @@ public class LeaderboardHologram {
         }
 
         updateBackgroundHologram(currentY);
+
+        dynamicHeads.clear();
+        headFutures.clear();
+
+        String placeholder = PlayerUtils.getPlayerHead(UUID.fromString(PlayerUtils.PLACEHOLDER_PROFILE));
+
+        int displayedCount = Math.min(sorted.size(), options.maxDisplayEntries());
+        for (int i = 0; i < displayedCount; i++) {
+            UUID uuid = sorted.get(i).getKey();
+            dynamicHeads.put(uuid, placeholder);
+
+            CompletableFuture<Void> fut = PlayerUtils
+                    .getPlayerHeadAsync(uuid)
+                    .thenAccept(head -> {
+                        dynamicHeads.put(uuid, head);
+                        Integer index = playerIndexMap.get(uuid);
+                        if (index != null) {
+                            updateSingleHologramLine(uuid, index, playerData.get(uuid));
+                        }
+                    });
+
+            headFutures.add(fut);
+        }
+    }
+
+    private void updateSingleHologramLine(UUID uuid, int index, PlayerScore playerScore) {
+        if (baseLocation == null) return;
+
+        int maxEntries = options.maxDisplayEntries();
+
+        TextHologram entryHologram = entryHolograms.get(index);
+        int place = index + 1;
+
+        String content = getFormattedEntry(place, uuid, playerScore);
+        entryHologram.setMiniMessageText(content).update();
     }
 
     private void updateFirstPlaceHead(UUID uuid, double yOffset) {
@@ -384,10 +426,13 @@ public class LeaderboardHologram {
                 : options.defaultPlaceFormat();
 
         String headText = "";
-        if (options.leaderboardType() == LeaderboardType.ALL_PLAYER_HEADS &&
-                options.headMode() == HeadMode.RESOURCEPACK) {
-            headText = PlayerUtils.getPlayerHead(uuid);
+        if (options.leaderboardType() == LeaderboardType.ALL_PLAYER_HEADS
+                && options.headMode() == HeadMode.RESOURCEPACK) {
+
+            headText = dynamicHeads.getOrDefault(uuid,
+                    PlayerUtils.getPlayerHead(UUID.fromString(PlayerUtils.PLACEHOLDER_PROFILE)));
         }
+
 
         String formattedEntry = placeFormat
                 .replace("{place}", String.valueOf(place))

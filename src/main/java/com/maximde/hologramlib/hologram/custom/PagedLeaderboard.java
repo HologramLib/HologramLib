@@ -1,10 +1,10 @@
 package com.maximde.hologramlib.hologram.custom;
 
+import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.InteractionBox;
 import com.maximde.hologramlib.hologram.TextHologram;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Display;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @Getter
 @ApiStatus.Experimental
-public class PagedLeaderboard {
+public class PagedLeaderboard implements HologramManager.Events {
 
     private final List<LeaderboardHologram> pages = new ArrayList<>();
     private final Map<UUID, Integer> playerCurrentPage = new HashMap<>();
@@ -37,14 +37,14 @@ public class PagedLeaderboard {
 
     private double arrowOffset = 3;
     private double arrowHeight = 1.0;
-    private String leftArrowText = "<gold>◀</gold>";
-    private String rightArrowText = "<gold>▶</gold>";
+    private String leftArrowText = "<gold><</gold>";
+    private String rightArrowText = "<gold>></gold>";
     private Vector3F interactionBoxSize = new Vector3F(0.7F, 1, 0);
 
     @Getter
-    private Sound leftClickSound = Sound.BLOCK_HONEY_BLOCK_BREAK;
+    private Sound leftClickSound = Sound.BLOCK_AMETHYST_CLUSTER_FALL;
     @Getter
-    private Sound rightClickSound = Sound.BLOCK_HONEY_BLOCK_BREAK;
+    private Sound rightClickSound = Sound.BLOCK_AMETHYST_CLUSTER_FALL;
     @Getter
     private float leftClickVolume = 1.0F;
     @Getter
@@ -93,10 +93,12 @@ public class PagedLeaderboard {
                 .setResponsive(true);
 
         rightInteraction = new InteractionBox(baseId + "_right_interact", this::nextPage);
+
         rightInteraction.setSize(interactionBoxSize)
                 .setResponsive(true);
     }
 
+    @ApiStatus.Experimental
     public PagedLeaderboard rotate(float x) {
         for (LeaderboardHologram page : pages) {
             page.rotate(x, 0);
@@ -107,10 +109,23 @@ public class PagedLeaderboard {
         return this;
     }
 
+    @Override
+    public void onJoin(Player player) {
+        if (!this.playerCurrentPage.containsKey(player.getUniqueId())) {
+            this.show(player);
+        }
+    }
+
+    @Override
+    public void onQuit(Player player) {
+        playerCurrentPage.remove(player.getUniqueId());
+    }
+
     /**
      * Spawns the paged leaderboard at the specified location
      */
     public void init(Location location) {
+
         if (spawned) {
             throw new IllegalStateException("PagedLeaderboard is already spawned!");
         }
@@ -141,12 +156,6 @@ public class PagedLeaderboard {
 
     private Location computeArrowLocation(double offset) {
         float yawDeg = pages.get(0).getXRotation();
-
-        float threshold = 10f;
-
-        if (Math.abs(yawDeg - 180) < threshold || Math.abs(yawDeg + 180) < threshold) {
-            offset = -offset;
-        }
 
         double yawRad = Math.toRadians(yawDeg);
 
@@ -331,10 +340,14 @@ public class PagedLeaderboard {
     public void show(Player player) {
         if (!spawned) return;
 
+        for (LeaderboardHologram page : pages) {
+            page.hide(player);
+        }
+
         leftArrow.show(player);
         rightArrow.show(player);
-        leftInteraction.addViewer(player);
-        rightInteraction.addViewer(player);
+        leftInteraction.show(player);
+        rightInteraction.show(player);
 
         int currentPage = playerCurrentPage.getOrDefault(player.getUniqueId(), 0);
         if (currentPage < pages.size()) {
@@ -350,10 +363,10 @@ public class PagedLeaderboard {
     public void hide(Player player) {
         if (!spawned) return;
 
+        leftInteraction.hide(player);
+        rightInteraction.hide(player);
         leftArrow.hide(player);
         rightArrow.hide(player);
-        leftInteraction.removeViewer(player);
-        rightInteraction.removeViewer(player);
 
         for (LeaderboardHologram page : pages) {
             page.hide(player);
@@ -476,5 +489,4 @@ public class PagedLeaderboard {
     public PagedLeaderboard setRightArrowScale(float x, float y, float z) {
         return setRightArrowScale(new Vector3F(x, y, z));
     }
-
 }

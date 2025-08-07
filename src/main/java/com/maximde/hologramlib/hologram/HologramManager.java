@@ -5,9 +5,11 @@ import com.maximde.hologramlib.hologram.custom.PagedLeaderboard;
 import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.TaskHandle;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +26,24 @@ public class HologramManager {
     private final Map<Integer, InteractionBox> interactionBoxesByEntityId = new ConcurrentHashMap<>();
 
     private final PersistenceManager persistenceManager;
+
+    public Events events;
+
+    public interface Events {
+        void onJoin(Player player);
+        void onQuit(Player player);
+    }
+
+    @Getter
+    private final List<Events> eventHandlers = new ArrayList<>();
+
+    public void registerEventHandler(Events eventHandler) {
+        eventHandlers.add(eventHandler);
+    }
+
+    public void removeEventHandler(Events eventHandler) {
+        eventHandlers.remove(eventHandler);
+    }
 
     public boolean interactionBoxExists(String id) {
         return interactionBoxesById.containsKey(id);
@@ -117,6 +137,9 @@ public class HologramManager {
      * Spawns a PagedLeaderboard at the specified location with persistence option
      */
     public PagedLeaderboard spawn(PagedLeaderboard pagedLeaderboard, Location location) {
+
+        registerEventHandler(pagedLeaderboard);
+
         for (LeaderboardHologram page : pagedLeaderboard.getPages()) {
             page.setFixedRotation();
             spawn(page, location);
@@ -148,6 +171,8 @@ public class HologramManager {
         if (pagedLeaderboard == null || !pagedLeaderboard.isSpawned()) {
             return false;
         }
+
+        removeEventHandler(pagedLeaderboard);
 
         boolean success = true;
 

@@ -3,11 +3,6 @@ package com.maximde.hologramlib.utils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentBuilder;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
@@ -22,6 +17,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 @SuppressWarnings("unused")
@@ -46,6 +43,23 @@ public class PlayerUtils {
     private static final LRUCache<String, Optional<UUID>> uuidCache = new LRUCache<>(1000);
     private static final LRUCache<UUID, Optional<String>> skinUrlCache = new LRUCache<>(1000);
     private static final LRUCache<UUID, Optional<String>> playerHeadCache = new LRUCache<>(1000);
+
+    public static String PLACEHOLDER_PROFILE = "6d01fd6b-43ec-4294-b4f7-00dd3c330648";
+
+    private static final Set<UUID> loadingHeads = ConcurrentHashMap.newKeySet();
+
+    public static void loadPlaceholders() {
+        getPlayerHead(UUID.fromString(PLACEHOLDER_PROFILE));
+        Bukkit.getLogger().info("[HologramLib] Placeholder head loaded!");
+    }
+
+    public static CompletableFuture<String> getPlayerHeadAsync(UUID uuid) {
+        Optional<String> cached = playerHeadCache.get(uuid);
+        if (cached != null && cached.isPresent()) {
+            return CompletableFuture.completedFuture(cached.get());
+        }
+        return CompletableFuture.supplyAsync(() -> getPlayerHead(uuid));
+    }
 
     public static PlayerProfile getPlayerProfile(UUID uuid) {
         PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
@@ -73,7 +87,6 @@ public class PlayerUtils {
                 return cached;
             }
         }
-
         try {
             var url = new URI("https://api.mojang.com/users/profiles/minecraft/" + key).toURL();
             try (InputStream stream = url.openStream()) {
@@ -185,6 +198,7 @@ public class PlayerUtils {
                 return cached.orElse(null);
             }
         }
+
 
         try {
             InputStreamReader reader = new InputStreamReader(new URL(
