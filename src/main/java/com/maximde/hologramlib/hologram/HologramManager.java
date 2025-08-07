@@ -27,7 +27,6 @@ public class HologramManager {
 
     private final PersistenceManager persistenceManager;
 
-    public Events events;
 
     public interface Events {
         void onJoin(Player player);
