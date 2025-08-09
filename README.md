@@ -29,10 +29,10 @@
 
 ## 🫨 Features
 - **Multi-Type Holograms**    
-Text • Blocks • Items • Leaderboards  
+Text • Blocks • Items • Leaderboards • Paginated Leaderboards  
 
 - **Dynamic Content**  
-Live animations • MiniMessage formatting • ItemsAdder emojis
+Live animations • MiniMessage formatting • ItemsAdder emojis • PlaceholderAPI
 
 - **Advanced Mechanics**  
 Entity attachment • Per-player visibility • View distance control    
