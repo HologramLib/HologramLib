@@ -22,6 +22,11 @@
    - [Leaderboards](https://github.com/HologramLib/HologramLib/wiki/5.-Leaderboards)  
    - [Animations](https://github.com/HologramLib/HologramLib/wiki/6.-Animations)  
 
+<a href="https://github.com/HologramLib/HologramLib/releases/download/1.8.0/HologramLib-1.8.0.jar">
+  <img width="200px" src="https://github.com/HologramLib/Addons/blob/main/download_jar.svg" alt="Download"/>
+</a>
+
+
 ## 🫨 Features
 - **Multi-Type Holograms**    
 Text • Blocks • Items • Leaderboards  
