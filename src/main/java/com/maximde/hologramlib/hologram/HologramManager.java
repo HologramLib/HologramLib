@@ -241,7 +241,7 @@ public class HologramManager {
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location) {
         this.register(hologram);
-        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location, false).update());
+        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location, true).update());
 
         return hologram;
     }

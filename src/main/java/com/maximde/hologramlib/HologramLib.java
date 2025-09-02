@@ -94,7 +94,7 @@ public abstract class HologramLib {
     public static void init(boolean registerCommand) {
         if(loading || initialized) return;
 
-       if(plugin == null) {
+        if(plugin == null) {
             Bukkit.getLogger().log(Level.SEVERE,
                     "Failed to init HologramLib! HologramLib#onLoad(JavaPlugin) was not called in onLoad() main class.");
             Bukkit.getLogger().log(Level.SEVERE,
@@ -102,14 +102,14 @@ public abstract class HologramLib {
             return;
         }
 
-       if(!plugin.isEnabled()) {
-           Bukkit.getLogger().log(Level.SEVERE,
-                   "Failed to init HologramLib! The plugin instance which is used by HologramLib has not been initialized (" + plugin.getName() + ") yet!");
+        if(!plugin.isEnabled()) {
+            Bukkit.getLogger().log(Level.SEVERE,
+                    "Failed to init HologramLib! The plugin instance which is used by HologramLib has not been initialized (" + plugin.getName() + ") yet!");
 
-           Bukkit.getLogger().log(Level.SEVERE,
-                   "If you are not shading HologramLib, add depends: HologramLib to your plugin.yml");
-           return;
-       }
+            Bukkit.getLogger().log(Level.SEVERE,
+                    "If you are not shading HologramLib, add depends: HologramLib to your plugin.yml");
+            return;
+        }
 
         loading = true;
 
