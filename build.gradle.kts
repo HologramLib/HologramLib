@@ -1,4 +1,4 @@
-project.version = "1.8.0"
+project.version = "1.8.1"
 
 plugins {
     kotlin("jvm") version "2.0.21"
