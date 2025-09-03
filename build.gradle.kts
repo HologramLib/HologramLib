@@ -22,6 +22,14 @@ repositories {
     maven("https://repo.codemc.io/repository/maven-releases/")
     maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven {
+        name = "tcoded-releases"
+        url = uri("https://repo.tcoded.com/releases")
+    }
+    maven {
+        name = "evokeSnapshots"
+        url = uri("https://maven.evokegames.gg/snapshots")
+    }
 }
 
 dependencies {
@@ -29,13 +37,13 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
     compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.8.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.9.5")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("com.github.Tofaa2.EntityLib:spigot:2.4.11")
+    implementation("me.tofaa.entitylib:spigot:3.0.3-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
-    implementation("com.github.technicallycoded:FoliaLib:0.4.4")
+    implementation("com.tcoded:FoliaLib:0.5.1")
 
     implementation("com.github.HologramLib:AddonLib:1.1.0")
 
