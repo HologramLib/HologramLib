@@ -22,7 +22,7 @@
    - [Leaderboards](https://github.com/HologramLib/HologramLib/wiki/5.-Leaderboards)  
    - [Animations](https://github.com/HologramLib/HologramLib/wiki/6.-Animations)  
 
-<a href="https://github.com/HologramLib/HologramLib/releases/download/1.8.0/HologramLib-1.8.0.jar">
+<a href="https://github.com/HologramLib/HologramLib/releases/download/1.8.1/HologramLib-1.8.1.jar">
   <img width="200px" src="https://github.com/HologramLib/Addons/blob/main/download_jar.svg" alt="Download"/>
 </a>
 
@@ -44,9 +44,9 @@ Entity attachment • Per-player visibility • View distance control
 **Compatibility**  
 | Server Software | Minecraft Versions       | 
 |-----------------|--------------------------|
-| **Paper**       | 1.19.4 → 1.21.5 ✔️       |
-| **Purpur**      | 1.19.4 → 1.21.5 ✔️       | 
-| **Folia**       | 1.19.4 → 1.21.5 ✔️       | 
+| **Paper**       | 1.19.4 → 1.21.8 ✔️       |
+| **Purpur**      | 1.19.4 → 1.21.8 ✔️       | 
+| **Folia**       | 1.19.4 → 1.21.8 ✔️       | 
 | **Spigot**      | ❌ Not supported         | 
 | **Bedrock**     | ❌ Not supported         | 
 | **Legacy**      | ❌ (1.8 - 1.19.3)        | 
@@ -68,7 +68,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.maximjsx:HologramLib:1.8.0'
+    implementation 'com.github.maximjsx:HologramLib:1.8.1'
 }
 ```
 
@@ -148,7 +148,7 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
-  <sub>Used by 80+ servers | 6,000+ downloads across platforms</sub><br>
+  <sub>Used by 80+ servers | 7,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •
