@@ -9,7 +9,7 @@
 
 
   <p>Leave a :star: if you like this library :octocat:</p>
-  <h3>Display Entity Based Hologram Library for Modern Minecraft Servers</h3>
+  <h3>Display Entity Based Hologram Library</h3>
   <p>Packet-based • Feature-rich • Developer-friendly</p>
 </div>
 
@@ -27,14 +27,14 @@
 </a>
 
 
-## 🫨 Features
-- **Multi-Type Holograms**    
+## Features
+- **Types**    
 Text • Blocks • Items • Leaderboards • Paginated Leaderboards  
 
 - **Dynamic Content**  
 Live animations • MiniMessage formatting • ItemsAdder emojis • PlaceholderAPI
 
-- **Advanced Mechanics**  
+- **Mechanics**  
 Entity attachment • Per-player visibility • View distance control    
 
 ---
@@ -42,7 +42,7 @@ Entity attachment • Per-player visibility • View distance control
 ## ⚙️ Technical Specifications
 
 **Compatibility**  
-| Server Software | Minecraft Versions       | 
+| Software | Versions       | 
 |-----------------|--------------------------|
 | **Paper**       | 1.19.4 → 1.21.8 ✔️       |
 | **Purpur**      | 1.19.4 → 1.21.8 ✔️       | 
@@ -59,7 +59,7 @@ If you want to learn how to use HologramLib in your plugin, check out the detail
 
 ---
 
-## ✈️ Quick Integration
+## Integration
 
 **Step 1: Add Dependency**
 ```gradle
@@ -90,7 +90,7 @@ manager.spawn(hologram);
 
 ---
 
-## 📕 Learning Resources
+## Resources
 
 <img width="536px" src="https://github.com/user-attachments/assets/e4d108d3-e6cb-4d33-b91b-aa989e5e4475" alt="HologramLib Banner">
 
@@ -102,14 +102,14 @@ manager.spawn(hologram);
 
 ---
 
-## 😎 Featured Implementations
+## Featured Implementations
 - **TypingInChat** ([Modrinth](https://modrinth.com/plugin/typinginchat-plugin)) - Real-time typing visualization
 
 *[Your Project Here 🫵]* - Submit via PR or <a href="https://discord.gg/2UTkYj26B4">Discord</a>!
 
 ---
 
-## 👁️ Roadmap & Vision
+## Roadmap
 **2025**  
 - Particle-effect holograms
 - ~~Interactive holograms~~
