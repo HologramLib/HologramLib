@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -130,10 +131,19 @@ public class LeaderboardHologram {
         private boolean decimalNumbers = false;
 
         @Builder.Default
+        private NumberFormat numberFormat = null;
+
+        @Builder.Default
+        private Locale numberLocale = Locale.GERMANY;
+
+        @Builder.Default
+        private int maxFractionDigits = 2;
+
+        @Builder.Default
         private int backgroundColor = 0x54000000;
     }
 
-    public record PlayerScore(String name, double score) {}
+    public record PlayerScore(String name, Number score) {}
 
     /**
      * Configuration options for customizing the leaderboard display.
@@ -206,6 +216,10 @@ public class LeaderboardHologram {
     }
 
     public void setPlayerScore(UUID uuid, String name, double score) {
+        playerData.put(uuid, new PlayerScore(name, score));
+    }
+
+    public void setPlayerScore(UUID uuid, String name, long score) {
         playerData.put(uuid, new PlayerScore(name, score));
     }
 
@@ -409,7 +423,7 @@ public class LeaderboardHologram {
     private List<Map.Entry<UUID, PlayerScore>> getSortedEntries() {
         List<Map.Entry<UUID, PlayerScore>> sorted = new ArrayList<>(playerData.entrySet());
         Comparator<Map.Entry<UUID, PlayerScore>> comparator = Comparator.comparingDouble(
-                entry -> entry.getValue().score()
+                entry -> entry.getValue().score().doubleValue()
         );
 
         if (options.sortOrder() == SortOrder.DESCENDING) {
@@ -433,16 +447,34 @@ public class LeaderboardHologram {
                     PlayerUtils.getPlayerHead(UUID.fromString(PlayerUtils.PLACEHOLDER_PROFILE)));
         }
 
-
-        String formattedEntry = placeFormat
+        return placeFormat
                 .replace("{place}", String.valueOf(place))
                 .replace("{name}", playerScore.name())
-                .replace("{score}", String.valueOf(options.decimalNumbers ? playerScore.score() : ((long) playerScore.score())))
+                .replace("{score}", formatScore(playerScore.score()))
                 .replace("{suffix}", options.suffix())
                 .replace("{extra}", options.extra().getOrDefault(uuid, ""))
                 .replace("{head}", headText);
+    }
 
-        return formattedEntry;
+    private String formatScore(Number n) {
+        NumberFormat nf = options.numberFormat();
+        if (nf != null) {
+            return nf.format(n);
+        }
+
+        // Fallback
+        NumberFormat def;
+        if (options.decimalNumbers()) {
+            def = NumberFormat.getNumberInstance(options.numberLocale());
+            def.setGroupingUsed(true);
+            def.setMinimumFractionDigits(0);
+            def.setMaximumFractionDigits(Math.max(0, options.maxFractionDigits()));
+            return def.format(n.doubleValue());
+        } else {
+            def = NumberFormat.getIntegerInstance(options.numberLocale());
+            def.setGroupingUsed(true);
+            return def.format(n.longValue());
+        }
     }
 
     private String getEmptyPlaceFormat(int place) {
