@@ -274,7 +274,8 @@ public abstract class Hologram<T extends Hologram<T>> {
         World world = this.location.getWorld();
 
         if (world != null &&  (this.renderMode == RenderMode.ALL || this.renderMode == RenderMode.NEARBY || this.renderMode == RenderMode.NOT_ATTACHED_PLAYER)) {
-            List<Player> viewersToKeep = new ArrayList<>(world.getPlayers()).stream()
+            List<Player> viewersToKeep = List.copyOf(world.getPlayers());
+            viewersToKeep = viewersToKeep.stream()
                     .filter(Objects::nonNull)
                     .filter(player ->
                             player.isOnline() &&

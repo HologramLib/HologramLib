@@ -146,7 +146,7 @@ public abstract class HologramLib {
             }
 
             AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());
-            addonLib.setEnabledAddons(new String[]{"Commands"})
+            addonLib.setEnabledAddons(new String[]{})
                     .init();
             if(registerCommand) registerCommand(new HoloCommand(addonLib));
 

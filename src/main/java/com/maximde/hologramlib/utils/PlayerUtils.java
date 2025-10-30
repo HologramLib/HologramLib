@@ -13,9 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +23,10 @@ import java.util.logging.Level;
 @Getter
 public class PlayerUtils {
     private static final String DEFAULT_SKIN_URL = "https://textures.minecraft.net/texture/60a5bd016b3c9a1b9272e4929e30827a67be4ebb219017adbbc4a4d22ebd5b1";
+
+    private static final int CONNECTION_TIMEOUT = 3000;
+    private static final int READ_TIMEOUT = 5000;
+
 
     private static class LRUCache<K, V> extends LinkedHashMap<K, V> {
         private final int maxSize;
@@ -49,8 +51,12 @@ public class PlayerUtils {
     private static final Set<UUID> loadingHeads = ConcurrentHashMap.newKeySet();
 
     public static void loadPlaceholders() {
-        getPlayerHead(UUID.fromString(PLACEHOLDER_PROFILE));
-        Bukkit.getLogger().info("[HologramLib] Placeholder head loaded!");
+        try {
+            getPlayerHead(UUID.fromString(PLACEHOLDER_PROFILE));
+            Bukkit.getLogger().info("[HologramLib] Placeholder head loaded!");
+        } catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "[HologramLib] Failed to load placeholder head: " + e.getMessage());
+        }
     }
 
     public static CompletableFuture<String> getPlayerHeadAsync(UUID uuid) {
@@ -58,7 +64,11 @@ public class PlayerUtils {
         if (cached != null && cached.isPresent()) {
             return CompletableFuture.completedFuture(cached.get());
         }
-        return CompletableFuture.supplyAsync(() -> getPlayerHead(uuid));
+        return CompletableFuture.supplyAsync(() -> getPlayerHead(uuid))
+                .exceptionally(ex -> {
+                    Bukkit.getLogger().log(Level.WARNING, "Failed to load player head async for " + uuid + ": " + ex.getMessage());
+                    return null;
+                });
     }
 
     public static PlayerProfile getPlayerProfile(UUID uuid) {
@@ -66,35 +76,71 @@ public class PlayerUtils {
         PlayerTextures textures = profile.getTextures();
         try {
             String skinUrl = PlayerUtils.getPlayerSkinUrl(uuid);
-            if (skinUrl == null) {
-                Bukkit.getLogger().log(Level.WARNING, "Could not find skin url for " + uuid);
-                return profile;
+            if (skinUrl == null || skinUrl.isEmpty()) {
+                Bukkit.getLogger().log(Level.WARNING, "Could not find skin url for " + uuid + ", using default");
+                skinUrl = DEFAULT_SKIN_URL;
             }
             URL url = new URI(skinUrl).toURL();
             textures.setSkin(url);
         } catch (IOException | URISyntaxException e) {
-            Bukkit.getLogger().log(Level.WARNING, e.getMessage());
+            Bukkit.getLogger().log(Level.WARNING, "Failed to set skin texture: " + e.getMessage());
         }
         profile.setTextures(textures);
         return profile;
     }
 
+
+
+    /**
+     * Create a URL connection with proper timeouts
+     */
+    private static URLConnection createConnection(URL url) throws IOException {
+        URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(CONNECTION_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
+        connection.setRequestProperty("User-Agent", "HologramLib/1.8.2");
+        return connection;
+    }
+
     public static Optional<UUID> getUUID(String playerName) {
-        String key = playerName.toLowerCase();
+        if (playerName == null || playerName.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        String key = playerName.toLowerCase().trim();
+
         synchronized (uuidCache) {
             Optional<UUID> cached = uuidCache.get(key);
             if (cached != null) {
                 return cached;
             }
         }
+
         try {
-            var url = new URI("https://api.mojang.com/users/profiles/minecraft/" + key).toURL();
-            try (InputStream stream = url.openStream()) {
-                var response = new String(stream.readAllBytes());
-                String id = JsonParser.parseString(response)
-                        .getAsJsonObject()
-                        .get("id")
-                        .getAsString();
+            URL url = new URI("https://api.mojang.com/users/profiles/minecraft/" + key).toURL();
+            URLConnection connection = createConnection(url);
+
+            try (InputStream stream = connection.getInputStream()) {
+                String response = new String(stream.readAllBytes());
+
+                if (response.isEmpty()) {
+                    Optional<UUID> result = Optional.empty();
+                    synchronized (uuidCache) {
+                        uuidCache.put(key, result);
+                    }
+                    return result;
+                }
+
+                JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+                if (!json.has("id")) {
+                    Optional<UUID> result = Optional.empty();
+                    synchronized (uuidCache) {
+                        uuidCache.put(key, result);
+                    }
+                    return result;
+                }
+
+                String id = json.get("id").getAsString();
                 UUID uuid = UUID.fromString(id.replaceFirst(
                         "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                         "$1-$2-$3-$4-$5"));
@@ -104,22 +150,30 @@ public class PlayerUtils {
                 }
                 return result;
             }
+        } catch (SocketTimeoutException e) {
+            Bukkit.getLogger().log(Level.WARNING, "Timeout while fetching UUID for " + key);
+        } catch (IOException e) {
+            Bukkit.getLogger().log(Level.WARNING, "Network error while fetching UUID for " + key + ": " + e.getMessage());
         } catch (Exception e) {
-            Optional<UUID> result = Optional.empty();
-            synchronized (uuidCache) {
-                uuidCache.put(key, result);
-            }
-            return result;
+            Bukkit.getLogger().log(Level.WARNING, "Error fetching UUID for " + key + ": " + e.getMessage());
         }
+
+        Optional<UUID> result = Optional.empty();
+        synchronized (uuidCache) {
+            uuidCache.put(key, result);
+        }
+        return result;
     }
 
     /**
      * Get a combination of unicodes which represent pixels and offsets
      * to display a player head
-     * @return
      */
     public static String getPlayerHead(UUID uuid) {
-        if (uuid == null) return null;
+        if (uuid == null) {
+            Bukkit.getLogger().log(Level.WARNING, "Attempted to get player head with null UUID");
+            return null;
+        }
 
         synchronized (playerHeadCache) {
             Optional<String> cached = playerHeadCache.get(uuid);
@@ -128,10 +182,28 @@ public class PlayerUtils {
             }
         }
 
+        if (!loadingHeads.add(uuid)) {
+            Bukkit.getLogger().log(Level.FINE, "Already loading head for " + uuid);
+            return null;
+        }
+
         try {
-            String[] hexColors = getPixelColorsFromSkin(getPlayerSkinUrl(uuid));
-            if (hexColors.length < 64) {
-                throw new IllegalArgumentException("Hex colors must have at least 64 elements.");
+            String skinUrl = getPlayerSkinUrl(uuid);
+            if (skinUrl == null) {
+                Bukkit.getLogger().log(Level.WARNING, "Could not retrieve skin URL for " + uuid);
+                synchronized (playerHeadCache) {
+                    playerHeadCache.put(uuid, Optional.empty());
+                }
+                return null;
+            }
+
+            String[] hexColors = getPixelColorsFromSkin(skinUrl);
+            if (hexColors == null || hexColors.length < 64) {
+                Bukkit.getLogger().log(Level.WARNING, "Invalid pixel colors for " + uuid);
+                synchronized (playerHeadCache) {
+                    playerHeadCache.put(uuid, Optional.empty());
+                }
+                return null;
             }
 
             StringBuilder sb = new StringBuilder();
@@ -158,17 +230,38 @@ public class PlayerUtils {
 
             return result;
         } catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "Failed to generate player head for " + uuid + ": " + e.getMessage());
             synchronized (playerHeadCache) {
                 playerHeadCache.put(uuid, Optional.empty());
             }
             return null;
+        } finally {
+            loadingHeads.remove(uuid);
         }
     }
 
+    @Nullable
     private static String[] getPixelColorsFromSkin(String playerSkinUrl) {
+        if (playerSkinUrl == null || playerSkinUrl.isEmpty()) {
+            return null;
+        }
+
         String[] colors = new String[64];
+        BufferedImage skin = null;
+
         try {
-            BufferedImage skin = ImageIO.read(new URL(playerSkinUrl));
+            URL url = new URL(playerSkinUrl);
+            URLConnection connection = createConnection(url);
+
+            try (InputStream inputStream = connection.getInputStream()) {
+                skin = ImageIO.read(inputStream);
+            }
+
+            if (skin == null) {
+                Bukkit.getLogger().log(Level.WARNING, "Failed to read skin image from URL: " + playerSkinUrl);
+                return null;
+            }
+
             boolean overlay = skin.getHeight() >= 64;
 
             BufferedImage face = skin.getSubimage(8, 8, 8, 8);
@@ -184,33 +277,51 @@ public class PlayerUtils {
                     colors[idx++] = String.format("#%06X", rgb & 0xFFFFFF);
                 }
             }
-        } catch (IOException e) { e.printStackTrace(); }
-        return colors;
+            return colors;
+        } catch (SocketTimeoutException e) {
+            Bukkit.getLogger().log(Level.WARNING, "Timeout while downloading skin from: " + playerSkinUrl);
+        } catch (IOException e) {
+            Bukkit.getLogger().log(Level.WARNING, "IO error while reading skin from " + playerSkinUrl + ": " + e.getMessage());
+        } catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "Error processing skin from " + playerSkinUrl + ": " + e.getMessage());
+        } finally {
+            if (skin != null) {
+                skin.flush();
+            }
+        }
+        return null;
     }
 
     @Nullable
     public static String getPlayerSkinUrl(UUID uuid) {
-        if (uuid == null) return DEFAULT_SKIN_URL;
+        if (uuid == null) {
+            Bukkit.getLogger().log(Level.WARNING, "Attempted to get skin URL with null UUID");
+            return DEFAULT_SKIN_URL;
+        }
 
         synchronized (skinUrlCache) {
             Optional<String> cached = skinUrlCache.get(uuid);
             if (cached != null) {
-                return cached.orElse(null);
+                return cached.orElse(DEFAULT_SKIN_URL);
             }
         }
 
 
+        InputStreamReader reader = null;
         try {
-            InputStreamReader reader = new InputStreamReader(new URL(
-                    "https://sessionserver.mojang.com/session/minecraft/profile/" +
-                            uuid.toString().replace("-", "")).openConnection().getInputStream());
+            String uuidString = uuid.toString().replace("-", "");
+            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuidString);
+            URLConnection connection = createConnection(url);
 
+            reader = new InputStreamReader(connection.getInputStream());
             JsonObject profile = JsonParser.parseReader(reader).getAsJsonObject();
+
             if (!profile.has("properties")) {
+                Bukkit.getLogger().log(Level.FINE, "No properties found for UUID " + uuid);
                 synchronized (skinUrlCache) {
-                    skinUrlCache.put(uuid, Optional.empty());
+                    skinUrlCache.put(uuid, Optional.of(DEFAULT_SKIN_URL));
                 }
-                return null;
+                return DEFAULT_SKIN_URL;
             }
 
             String encodedTextures = profile.getAsJsonArray("properties")
@@ -224,18 +335,31 @@ public class PlayerUtils {
 
             String skinUrl = textures.has("SKIN") ?
                     textures.getAsJsonObject("SKIN").get("url").getAsString() :
-                    null;
+                    DEFAULT_SKIN_URL;
 
-            Optional<String> result = Optional.ofNullable(skinUrl);
+            Optional<String> result = Optional.of(skinUrl != null ? skinUrl : DEFAULT_SKIN_URL);
             synchronized (skinUrlCache) {
                 skinUrlCache.put(uuid, result);
             }
-            return skinUrl;
-        } catch (Exception exception) {
-            synchronized (skinUrlCache) {
-                skinUrlCache.put(uuid, Optional.of(DEFAULT_SKIN_URL));
+            return skinUrl != null ? skinUrl : DEFAULT_SKIN_URL;
+        } catch (SocketTimeoutException e) {
+            Bukkit.getLogger().log(Level.WARNING, "Timeout while fetching skin URL for " + uuid);
+        } catch (IOException e) {
+            Bukkit.getLogger().log(Level.WARNING, "Network error while fetching skin URL for " + uuid + ": " + e.getMessage());
+        } catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "Error fetching skin URL for " + uuid + ": " + e.getMessage());
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
             }
-            return DEFAULT_SKIN_URL;
         }
+
+        synchronized (skinUrlCache) {
+            skinUrlCache.put(uuid, Optional.of(DEFAULT_SKIN_URL));
+        }
+        return DEFAULT_SKIN_URL;
     }
 }
