@@ -1,22 +1,80 @@
 project.version = "1.8.2"
 
 group = "com.github.max1mde"
-version = "1.8.2"
+version = "1.8.3"
 
 plugins {
     kotlin("jvm") version "2.0.21"
     id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
     id("io.github.goooler.shadow") version "8.1.8"
     id("maven-publish")
+    signing
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 publishing {
     publications {
-        register<MavenPublication>("maven") {
-            from(components["java"])
+        register<MavenPublication>("mavenJava") {
+            artifact(tasks.shadowJar.get()) {
+            }
+
+            groupId = "com.maximjsx"
+            artifactId = "hologramlib"
+            version = project.version.toString()
+
+            pom {
+                name.set("HologramLib")
+                description.set("Fancy hologram library")
+                url.set("https://github.com/HologramLib/HologramLib")
+                licenses {
+                    license {
+                        name.set("GPL-3.0 License")
+                        url.set("https://opensource.org/license/gpl-3-0")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("maximjsx")
+                        name.set("Maxim.jsx")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/HologramLib/HologramLib")
+                    connection.set("scm:git:git://github.com/HologramLib/HologramLib.git")
+                    developerConnection.set("scm:git:ssh://github.com/HologramLib/HologramLib.git")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "MavenCentral"
+            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+            credentials {
+                username = project.findProperty("ossrhUsername") as String? ?: ""
+                password = project.findProperty("ossrhPassword") as String? ?: ""
+            }
         }
     }
 }
+
+
+signing {
+    val secretKey: String? = project.findProperty("signing.secretKey") as String?
+    val password: String? = project.findProperty("signing.password") as String?
+
+    if (secretKey != null && password != null) {
+        useInMemoryPgpKeys(secretKey, password)
+        sign(publishing.publications["mavenJava"])
+    }
+}
+
+
 
 repositories {
     mavenCentral()
@@ -29,10 +87,6 @@ repositories {
         name = "tcoded-releases"
         url = uri("https://repo.tcoded.com/releases")
     }
-    maven {
-        name = "evokeSnapshots"
-        url = uri("https://maven.evokegames.gg/snapshots")
-    }
 }
 
 dependencies {
@@ -44,7 +98,7 @@ dependencies {
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("me.tofaa.entitylib:spigot:3.0.3-SNAPSHOT")
+    implementation("com.github.maximjsx.EntityLib:spigot:1.0.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("com.tcoded:FoliaLib:0.5.1")
 
