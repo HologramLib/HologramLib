@@ -16,6 +16,11 @@ java {
     withJavadocJar()
 }
 
+tasks.withType<PublishToMavenRepository>().configureEach {
+    dependsOn(tasks.shadowJar)
+}
+
+
 publishing {
     publications {
         register<MavenPublication>("mavenJava") {
