@@ -489,4 +489,32 @@ public class PagedLeaderboard implements HologramManager.Events {
     public PagedLeaderboard setRightArrowScale(float x, float y, float z) {
         return setRightArrowScale(new Vector3F(x, y, z));
     }
+
+    /**
+     * Teleports the paged leaderboard to a new location
+     * @param location The new location for the leaderboard
+     * @return This PagedLeaderboard instance for method chaining
+     */
+    public PagedLeaderboard teleport(Location location) {
+        if (!spawned) {
+            throw new IllegalStateException("PagedLeaderboard must be spawned before teleporting! Use init() first.");
+        }
+
+        this.baseLocation = location.clone();
+
+        for (LeaderboardHologram page : pages) {
+            page.teleport(baseLocation);
+        }
+
+        Location leftLoc  = computeArrowLocation(-arrowOffset);
+        Location rightLoc = computeArrowLocation( arrowOffset);
+
+        leftArrow.teleport(leftLoc).update();
+        rightArrow.teleport(rightLoc).update();
+
+        leftInteraction.teleport(leftLoc);
+        rightInteraction.teleport(rightLoc);
+
+        return this;
+    }
 }
