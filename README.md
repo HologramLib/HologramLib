@@ -22,7 +22,7 @@
    - [Leaderboards](https://github.com/HologramLib/HologramLib/wiki/5.-Leaderboards)  
    - [Animations](https://github.com/HologramLib/HologramLib/wiki/6.-Animations)  
 
-<a href="https://github.com/HologramLib/HologramLib/releases/download/1.8.1/HologramLib-1.8.1.jar">
+<a href="https://github.com/HologramLib/HologramLib/releases/download/1.8.3/HologramLib-1.8.3.jar">
   <img width="200px" src="https://github.com/HologramLib/Addons/blob/main/download_jar.svg" alt="Download"/>
 </a>
 
@@ -68,7 +68,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.hologramlib:HologramLib:1.8.2'
+    implementation 'com.github.HologramLib:HologramLib:1.8.3.2'
 }
 ```
 
