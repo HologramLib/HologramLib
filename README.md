@@ -148,6 +148,9 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
+
+  <a alt="o7studios" href="https://o7.studio"><img src="https://i.imgur.com/pniirmi.png"></a>
+  
   <sub>Used by 80+ servers | 7,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
