@@ -151,13 +151,13 @@ Contributions to this repo or the example plugin are welcome!
 
   <a alt="o7studios" href="https://o7.studio"><img src="https://i.imgur.com/pniirmi.png"></a>
   
-  <sub>Used by 80+ servers | 7,000+ downloads across platforms</sub><br>
+  <sub>Used by 100+ servers | 10,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •
   <a href="https://maximjsx.com/projects/hologramlib">Maxim.jsx</a> •
   <a href="https://github.com/HologramLib/HologramLib/releases/latest">Latest Release</a> •
   <a href="https://discord.gg/2UTkYj26B4">Support</a><br>
-  <sub>License: GPL-3.0 | © 2025 <a href="https://github.com/maximjsx/">Maxim</a></sub>
+  <sub>License: GPL-3.0 | © 2026 <a href="https://github.com/maximjsx/">Maxim</a></sub>
 </div>
 
