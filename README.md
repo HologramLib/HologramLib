@@ -141,6 +141,7 @@ Contributions to this repo or the example plugin are welcome!
 | Server |   |
 |--------|----------|
 | [rangemc]( https://www.rangemc.net/ ) | <img src="https://github.com/user-attachments/assets/c65bc715-02da-4c69-94f7-7c3b96ab9d14" width="50" /> | 
+| [hysteria]( https://hysteria-gaming.org/ ) | <img src="https://github.com/user-attachments/assets/de4eaf62-267b-4b11-95e2-7e3ad275c0cc" width="50" /> | 
 
 <div align="center"><sup>Live Statistics</sup></div>
 
