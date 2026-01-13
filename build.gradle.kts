@@ -97,6 +97,7 @@ dependencies {
     compileOnly("com.github.retrooper:packetevents-spigot:2.10.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly("com.arcaniax:HeadDatabase-API:1.3.2")
 
     implementation("com.github.maximjsx.EntityLib:spigot:1.0.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
@@ -152,6 +153,6 @@ bukkit {
     author = "MaximDe"
     foliaSupported = true
     depend = listOf("packetevents")
-    softDepend = listOf("ItemsAdder", "PlaceholderAPI")
+    softDepend = listOf("ItemsAdder", "PlaceholderAPI", "HeadDatabase")
     name = "HologramLib"
 }
