@@ -129,8 +129,7 @@ Contributions to this repo or the example plugin are welcome!
 |--------|----------|
 | [![](https://avatars.githubusercontent.com/u/114857048?v=4&s=50)](https://github.com/maximjsx) | [maximjsx]( https://github.com/maximjsx ) |
 | [![](https://avatars.githubusercontent.com/u/67076970?v=4&s=50)](https://github.com/feeeedox) | [feeeedox]( https://github.com/feeeedox ) |
-| [![](https://avatars.githubusercontent.com/in/15368?v=4&s=50)](https://github.com/apps/github-actions) | [github-actions[bot]]( https://github.com/apps/github-actions ) |
-| [![](https://avatars.githubusercontent.com/u/153451816?v=4&s=50)](https://github.com/misieur) | [misieur]( https://github.com/misieur ) |
+| <img src="https://avatars.githubusercontent.com/u/153451816?v=4" width="50" /> | [misieur]( https://github.com/misieur ) |
 | [![](https://avatars.githubusercontent.com/u/116300577?v=4&s=50)](https://github.com/WhyZerVellasskx) | [WhyZerVellasskx]( https://github.com/WhyZerVellasskx ) |
 | [![](https://avatars.githubusercontent.com/u/46348263?v=4&s=50)](https://github.com/RootException) | [RootException]( https://github.com/RootException ) |
 | [![](https://avatars.githubusercontent.com/u/50980887?v=4&s=50)](https://github.com/parallela) | [parallela]( https://github.com/parallela ) |
