@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.util.Quaternion4f;
+import com.maximde.hologramlib.hook.HeadDatabaseHook;
 import com.maximde.hologramlib.utils.PlayerUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -102,6 +103,79 @@ public class ItemHologram extends Hologram<ItemHologram> {
             Bukkit.getLogger().warning("Failed to set player head in ItemHologram: " + exception.getMessage());
             return this;
         }
+    }
+
+    /**
+     * Sets the item to a player head using a raw base64 texture string.
+     * This is useful for custom heads from HeadDatabase or similar plugins.
+     * @param base64Texture The base64 encoded texture value (the "Value" field from textures property).
+     * @return this (for chaining)
+     */
+    public ItemHologram setBase64Head(String base64Texture) {
+        try {
+            List<ItemProfile.Property> properties = new ArrayList<>();
+            properties.add(new ItemProfile.Property("textures", base64Texture, null));
+
+            ItemProfile profile = new ItemProfile("CustomHead", UUID.randomUUID(), properties);
+
+            this.item = new ItemStack.Builder()
+                    .type(ItemTypes.PLAYER_HEAD)
+                    .component(ComponentTypes.PROFILE, profile)
+                    .build();
+
+            return this;
+        } catch (Exception exception) {
+            Bukkit.getLogger().warning("Failed to set base64 head in ItemHologram: " + exception.getMessage());
+            return this;
+        }
+    }
+
+    /**
+     * Sets the item to a player head using a skin URL.
+     * The URL should point to a Minecraft skin texture.
+     * @param skinUrl The URL of the skin texture (e.g., from textures.minecraft.net).
+     * @return this (for chaining)
+     */
+    public ItemHologram setUrlHead(String skinUrl) {
+        try {
+            List<ItemProfile.Property> properties = new ArrayList<>();
+            String textureJson = "{\"textures\":{\"SKIN\":{\"url\":\"" + skinUrl + "\"}}}";
+            String base64Texture = Base64.getEncoder().encodeToString(textureJson.getBytes());
+
+            properties.add(new ItemProfile.Property("textures", base64Texture, null));
+
+            ItemProfile profile = new ItemProfile("UrlHead", UUID.randomUUID(), properties);
+
+            this.item = new ItemStack.Builder()
+                    .type(ItemTypes.PLAYER_HEAD)
+                    .component(ComponentTypes.PROFILE, profile)
+                    .build();
+
+            return this;
+        } catch (Exception exception) {
+            Bukkit.getLogger().warning("Failed to set URL head in ItemHologram: " + exception.getMessage());
+            return this;
+        }
+    }
+
+    /**
+     * Sets the item to a player head using a HeadDatabase head ID.
+     * Requires HeadDatabase plugin to be installed and enabled.
+     * @param headId The HeadDatabase head ID (e.g., "7129").
+     * @return this (for chaining)
+     */
+    public ItemHologram setHeadDatabaseHead(String headId) {
+        if (!HeadDatabaseHook.isAvailable()) {
+            Bukkit.getLogger().warning("HeadDatabase is not available. Cannot set head with ID: " + headId);
+            return this;
+        }
+
+        return HeadDatabaseHook.getBase64Texture(headId)
+                .map(this::setBase64Head)
+                .orElseGet(() -> {
+                    Bukkit.getLogger().warning("Could not find HeadDatabase head with ID: " + headId);
+                    return this;
+                });
     }
 
     @Override

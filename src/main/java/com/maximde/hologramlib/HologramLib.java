@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
+import com.maximde.hologramlib.hook.HeadDatabaseHook;
 import com.maximde.hologramlib.hook.PlaceholderAPIHook;
 import com.maximde.hologramlib.listener.InteractionPacketListener;
 import com.maximde.hologramlib.listener.PlayerJoinListener;
@@ -143,6 +144,12 @@ public abstract class HologramLib {
                 new PlaceholderAPIHook(PacketEvents.getAPI());
             } else {
                 plugin.getLogger().log(Level.INFO, "PlaceholderAPI not found or not enabled. PlaceholderAPI support will be disabled.");
+            }
+
+            Plugin headDatabasePlugin = pluginManager.getPlugin("HeadDatabase");
+            if (headDatabasePlugin != null && headDatabasePlugin.isEnabled()) {
+                plugin.getLogger().log(Level.INFO, "HeadDatabase found! Initializing hook...");
+                HeadDatabaseHook.init();
             }
 
             AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());

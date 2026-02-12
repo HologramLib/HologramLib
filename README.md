@@ -128,10 +128,11 @@ Contributions to this repo or the example plugin are welcome!
 | Avatar | Username |
 |--------|----------|
 | [![](https://avatars.githubusercontent.com/u/114857048?v=4&s=50)](https://github.com/maximjsx) | [maximjsx]( https://github.com/maximjsx ) |
-| [![](https://avatars.githubusercontent.com/u/67076970?v=4&s=50)](https://github.com/Fedox-die-Ente) | [Fedox-die-Ente]( https://github.com/Fedox-die-Ente ) |
+| [![](https://avatars.githubusercontent.com/u/67076970?v=4&s=50)](https://github.com/feeeedox) | [feeeedox]( https://github.com/feeeedox ) |
 | <img src="https://avatars.githubusercontent.com/u/153451816?v=4" width="50" /> | [misieur]( https://github.com/misieur ) |
 | [![](https://avatars.githubusercontent.com/u/116300577?v=4&s=50)](https://github.com/WhyZerVellasskx) | [WhyZerVellasskx]( https://github.com/WhyZerVellasskx ) |
 | [![](https://avatars.githubusercontent.com/u/46348263?v=4&s=50)](https://github.com/RootException) | [RootException]( https://github.com/RootException ) |
+| [![](https://avatars.githubusercontent.com/u/50980887?v=4&s=50)](https://github.com/parallela) | [parallela]( https://github.com/parallela ) |
 | [![](https://avatars.githubusercontent.com/u/13736324?v=4&s=50)](https://github.com/matt11matthew) | [matt11matthew]( https://github.com/matt11matthew ) |
 
 <!-- CONTRIBUTORS:END -->
@@ -140,6 +141,7 @@ Contributions to this repo or the example plugin are welcome!
 | Server |   |
 |--------|----------|
 | [rangemc]( https://www.rangemc.net/ ) | <img src="https://github.com/user-attachments/assets/c65bc715-02da-4c69-94f7-7c3b96ab9d14" width="50" /> | 
+| [hysteria]( https://hysteria-gaming.org/ ) | <img src="https://github.com/user-attachments/assets/de4eaf62-267b-4b11-95e2-7e3ad275c0cc" width="50" /> | 
 
 <div align="center"><sup>Live Statistics</sup></div>
 
@@ -148,13 +150,16 @@ Contributions to this repo or the example plugin are welcome!
 ---
 
 <div align="center">
-  <sub>Used by 80+ servers | 7,000+ downloads across platforms</sub><br>
+
+  <a alt="o7studios" href="https://o7.studio"><img src="https://i.imgur.com/pniirmi.png"></a>
+  
+  <sub>Used by 100+ servers | 10,000+ downloads across platforms</sub><br>
   <a href="https://www.spigotmc.org/resources/111746/">SpigotMC</a> •
   <a href="https://hangar.papermc.io/maximjsx/HologramLib">Hangar</a> •
   <a href="https://modrinth.com/plugin/hologramlib">Modrinth</a> •
   <a href="https://maximjsx.com/projects/hologramlib">Maxim.jsx</a> •
   <a href="https://github.com/HologramLib/HologramLib/releases/latest">Latest Release</a> •
   <a href="https://discord.gg/2UTkYj26B4">Support</a><br>
-  <sub>License: GPL-3.0 | © 2025 <a href="https://github.com/maximjsx/">Maxim</a></sub>
+  <sub>License: GPL-3.0 | © 2026 <a href="https://github.com/maximjsx/">Maxim</a></sub>
 </div>
 
