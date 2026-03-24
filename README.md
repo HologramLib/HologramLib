@@ -68,7 +68,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.HologramLib:HologramLib:1.8.3.2'
+    implementation 'com.github.HologramLib:HologramLib:1.8.5'
 }
 ```
 
