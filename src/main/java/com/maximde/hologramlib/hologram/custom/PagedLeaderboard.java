@@ -5,6 +5,8 @@ import com.maximde.hologramlib.hologram.InteractionBox;
 import com.maximde.hologramlib.hologram.TextHologram;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Display;
@@ -36,10 +38,20 @@ public class PagedLeaderboard implements HologramManager.Events {
     private boolean spawned = false;
 
     private double arrowOffset = 3;
+
     private double arrowHeight = 1.0;
+
     private String leftArrowText = "<gold><</gold>";
+
     private String rightArrowText = "<gold>></gold>";
+
     private Vector3F interactionBoxSize = new Vector3F(0.7F, 1, 0);
+
+    @Setter @Accessors(chain = true)
+    private boolean showArrows = true;
+
+    @Setter @Accessors(chain = true)
+    private boolean singleDirectionCycling = false;
 
     @Getter
     private Sound leftClickSound = Sound.BLOCK_AMETHYST_CLUSTER_FALL;
@@ -88,14 +100,25 @@ public class PagedLeaderboard implements HologramManager.Events {
                 .setBackgroundColor(rightArrowBackground)
                 .setBillboard(Display.Billboard.FIXED);
 
-        leftInteraction = new InteractionBox(baseId + "_left_interact", this::previousPage);
+        leftInteraction = new InteractionBox(baseId + "_left_interact", this::handleLeftClick);
         leftInteraction.setSize(interactionBoxSize)
                 .setResponsive(true);
 
-        rightInteraction = new InteractionBox(baseId + "_right_interact", this::nextPage);
-
+        rightInteraction = new InteractionBox(baseId + "_right_interact", this::handleRightClick);
         rightInteraction.setSize(interactionBoxSize)
                 .setResponsive(true);
+    }
+
+    private void handleLeftClick(Player player) {
+        if (singleDirectionCycling) {
+            previousPage(player);
+        } else {
+            previousPage(player);
+        }
+    }
+
+    private void handleRightClick(Player player) {
+        nextPage(player);
     }
 
     @ApiStatus.Experimental
@@ -104,8 +127,10 @@ public class PagedLeaderboard implements HologramManager.Events {
             page.rotate(x, 0);
         }
 
-        leftArrow.setRotation(x, 0).update();
-        rightArrow.setRotation(x, 0).update();
+        if (showArrows) {
+            leftArrow.setRotation(x, 0).update();
+            rightArrow.setRotation(x, 0).update();
+        }
         return this;
     }
 
@@ -141,15 +166,18 @@ public class PagedLeaderboard implements HologramManager.Events {
             page.teleport(baseLocation);
         }
 
-        Location leftLoc  = computeArrowLocation(-arrowOffset);
-        Location rightLoc = computeArrowLocation( arrowOffset);
+        if (showArrows) {
+            Location leftLoc  = computeArrowLocation(-arrowOffset);
+            Location rightLoc = computeArrowLocation( arrowOffset);
 
-        leftArrow.teleport(leftLoc).update();
-        rightArrow.teleport(rightLoc).update();
+            leftArrow.teleport(leftLoc).update();
+            rightArrow.teleport(rightLoc).update();
 
-        leftInteraction.teleport(leftLoc);
-        rightInteraction.teleport(rightLoc);
-
+            if (!singleDirectionCycling) {
+                leftInteraction.teleport(leftLoc);
+            }
+            rightInteraction.teleport(rightLoc);
+        }
 
         showInitialPage();
     }
@@ -165,7 +193,6 @@ public class PagedLeaderboard implements HologramManager.Events {
         return baseLocation.clone().add(dx, arrowHeight, dz);
     }
 
-
     /**
      * Shows the initial page (page 0) to all online players
      */
@@ -176,7 +203,6 @@ public class PagedLeaderboard implements HologramManager.Events {
                     page.hide(player);
                 }
             }
-
 
             for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
                 playerCurrentPage.put(player.getUniqueId(), 0);
@@ -196,21 +222,25 @@ public class PagedLeaderboard implements HologramManager.Events {
         int nextPage = (currentPage + 1) % pages.size();
 
         switchToPage(player, nextPage);
-        player.playSound(rightInteraction.getLocation(), rightClickSound, rightClickVolume, rightClickPitch);
+        if (showArrows) {
+            player.playSound(rightInteraction.getLocation(), rightClickSound, rightClickVolume, rightClickPitch);
+        }
     }
 
     /**
      * Goes to the previous page for the specified player
      */
     public void previousPage(Player player) {
-        if (!spawned || pages.isEmpty()) return;
+        if (!spawned || pages.isEmpty() || singleDirectionCycling) return;
 
         UUID playerId = player.getUniqueId();
         int currentPage = playerCurrentPage.getOrDefault(playerId, 0);
         int prevPage = (currentPage - 1 + pages.size()) % pages.size();
 
         switchToPage(player, prevPage);
-        player.playSound(leftInteraction.getLocation(), leftClickSound, leftClickVolume, leftClickPitch);
+        if (showArrows) {
+            player.playSound(leftInteraction.getLocation(), leftClickSound, leftClickVolume, leftClickPitch);
+        }
     }
 
     public PagedLeaderboard setLeftClickSound(Sound sound) {
@@ -256,10 +286,8 @@ public class PagedLeaderboard implements HologramManager.Events {
     /**
      * Switches the player to a specific page
      */
-    public void switchToPage(Player player, int pageIndex) {
-        if (!spawned || pages.isEmpty() || pageIndex < 0 || pageIndex >= pages.size()) {
-            return;
-        }
+    private void switchToPage(Player player, int pageIndex) {
+        if (!spawned || pageIndex < 0 || pageIndex >= pages.size()) return;
 
         UUID playerId = player.getUniqueId();
         int currentPage = playerCurrentPage.getOrDefault(playerId, 0);
@@ -344,10 +372,15 @@ public class PagedLeaderboard implements HologramManager.Events {
             page.hide(player);
         }
 
-        leftArrow.show(player);
-        rightArrow.show(player);
-        leftInteraction.show(player);
-        rightInteraction.show(player);
+        if (showArrows) {
+            leftArrow.show(player);
+            rightArrow.show(player);
+
+            if (!singleDirectionCycling) {
+                leftInteraction.show(player);
+            }
+            rightInteraction.show(player);
+        }
 
         int currentPage = playerCurrentPage.getOrDefault(player.getUniqueId(), 0);
         if (currentPage < pages.size()) {
@@ -363,10 +396,12 @@ public class PagedLeaderboard implements HologramManager.Events {
     public void hide(Player player) {
         if (!spawned) return;
 
-        leftInteraction.hide(player);
-        rightInteraction.hide(player);
-        leftArrow.hide(player);
-        rightArrow.hide(player);
+        if (showArrows) {
+            leftInteraction.hide(player);
+            rightInteraction.hide(player);
+            leftArrow.hide(player);
+            rightArrow.hide(player);
+        }
 
         for (LeaderboardHologram page : pages) {
             page.hide(player);
@@ -506,14 +541,18 @@ public class PagedLeaderboard implements HologramManager.Events {
             page.teleport(baseLocation);
         }
 
-        Location leftLoc  = computeArrowLocation(-arrowOffset);
-        Location rightLoc = computeArrowLocation( arrowOffset);
+        if (showArrows) {
+            Location leftLoc  = computeArrowLocation(-arrowOffset);
+            Location rightLoc = computeArrowLocation( arrowOffset);
 
-        leftArrow.teleport(leftLoc).update();
-        rightArrow.teleport(rightLoc).update();
+            leftArrow.teleport(leftLoc).update();
+            rightArrow.teleport(rightLoc).update();
 
-        leftInteraction.teleport(leftLoc);
-        rightInteraction.teleport(rightLoc);
+            if (!singleDirectionCycling) {
+                leftInteraction.teleport(leftLoc);
+            }
+            rightInteraction.teleport(rightLoc);
+        }
 
         return this;
     }

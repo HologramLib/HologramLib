@@ -10,6 +10,7 @@ import com.maximde.hologramlib.utils.TaskHandle;
 import com.maximde.hologramlib.utils.Vector3F;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 import me.tofaa.entitylib.meta.EntityMeta;
 import me.tofaa.entitylib.wrapper.WrapperEntity;
@@ -19,6 +20,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
+import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
@@ -119,6 +121,15 @@ public abstract class Hologram<T extends Hologram<T>> {
 
     protected @Nullable Integer attachedEntityId;
 
+    @Getter
+    protected boolean interactive;
+
+    @Getter
+    protected InteractionBox interactionBox;
+
+    @Getter
+    protected InteractionBox.OnInteract onInteract;
+
     public interface Internal {
         Hologram<?> spawn(Location location, boolean ignorePitchYaw);
         void kill();
@@ -215,11 +226,14 @@ public abstract class Hologram<T extends Hologram<T>> {
         this.entity.remove();
         this.task.cancel();
         this.dead = true;
+        if (this.interactionBox != null) this.interactionBox.kill();
+        this.interactive = false;
     }
 
     public T teleport(Location newLocation) {
         this.location = newLocation;
         this.entity.teleport(SpigotConversionUtil.fromBukkitLocation(newLocation));
+        if (this.interactionBox != null) this.interactionBox.teleport(newLocation);
         return self();
     }
 
@@ -318,6 +332,7 @@ public abstract class Hologram<T extends Hologram<T>> {
         }
         this.entity.spawn(SpigotConversionUtil.fromBukkitLocation(this.location));
         this.dead = false;
+        if (this.interactionBox != null) this.interactionBox.teleport(location);
     }
 
     private void spawn(Location location) {
@@ -410,6 +425,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     public void show(Player player) {
         this.removeFromViewerBlacklist(player);
         this.addViewer(player);
+        if (this.interactionBox != null) this.interactionBox.show(player);
     }
 
     /**
@@ -419,6 +435,7 @@ public abstract class Hologram<T extends Hologram<T>> {
     public void hide(Player player) {
         this.addToViewerBlacklist(player);
         this.removeViewer(player);
+        if (this.interactionBox != null) this.interactionBox.hide(player);
     }
 
     public void addToViewerBlacklist(Player player) {
@@ -558,6 +575,33 @@ public abstract class Hologram<T extends Hologram<T>> {
         this.translation = new Vector3f(translation.x, translation.y, translation.z);
         return self();
     }
+
+    @ApiStatus.Experimental
+    public T onInteract(@NonNull InteractionBox.OnInteract onInteract) {
+        this.onInteract = onInteract;
+        this.interactive = true;
+        this.interactionBox = new InteractionBox(this.id + "_interaction", this.onInteract)
+                .setHeight(this.getHeight())
+                .setWidth(this.getWidth())
+                .setResponsive(true);
+        return self();
+    }
+
+    public T disableInteraction() {
+        this.interactive = false;
+        if(this.interactionBox != null) this.interactionBox.setResponsive(false);
+        return self();
+    }
+
+    public T enableInteraction() {
+        this.interactive = true;
+        if(this.interactionBox != null) this.interactionBox.setResponsive(true);
+        return self();
+    }
+
+    abstract int getHeight();
+
+    abstract int getWidth();
 
     public T setTransformation(Transformation transformation) {
         this.translation = transformation.getTranslation();

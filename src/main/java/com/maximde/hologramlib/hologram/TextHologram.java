@@ -102,9 +102,9 @@ public class TextHologram extends Hologram<TextHologram> {
         copy.scale = new Vector3f(this.scale);
         copy.translation = new Vector3f(this.translation);
         copy.rightRotation = new Quaternion4f(this.rightRotation.getX(), this.rightRotation.getY(),
-            this.rightRotation.getZ(), this.rightRotation.getW());
+                this.rightRotation.getZ(), this.rightRotation.getW());
         copy.leftRotation = new Quaternion4f(this.leftRotation.getX(), this.leftRotation.getY(),
-            this.leftRotation.getZ(), this.leftRotation.getW());
+                this.leftRotation.getZ(), this.leftRotation.getW());
         copy.billboard = this.billboard;
         copy.teleportDuration = this.teleportDuration;
         copy.interpolationDurationTransformation = this.interpolationDurationTransformation;
@@ -150,6 +150,28 @@ public class TextHologram extends Hologram<TextHologram> {
         meta.setSeeThrough(this.seeThroughBlocks);
         setInternalAlignment(meta);
         return meta;
+    }
+
+    @Override
+    public int getHeight() {
+        String plainText = getTextWithoutColor();
+        int lineCount = plainText.isEmpty() ? 1 : plainText.split("\n").length;
+        float charHeight = 0.1f;
+        float totalHeight = lineCount * charHeight;
+        return Math.max(1, (int) Math.ceil(totalHeight * this.scale.y));
+    }
+
+    @Override
+    public int getWidth() {
+        String plainText = getTextWithoutColor();
+        String[] lines = plainText.isEmpty() ? new String[]{""} : plainText.split("\n");
+        int maxLength = 0;
+        for (String line : lines) {
+            maxLength = Math.max(maxLength, line.length());
+        }
+        float charWidth = 0.06f;
+        float totalWidth = maxLength * charWidth;
+        return Math.max(1, (int) Math.ceil(totalWidth * Math.max(this.scale.x, this.scale.z)));
     }
 
     private void setInternalAlignment(TextDisplayMeta meta) {

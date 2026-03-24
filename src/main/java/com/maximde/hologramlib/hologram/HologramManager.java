@@ -2,7 +2,6 @@ package com.maximde.hologramlib.hologram;
 
 import com.maximde.hologramlib.hologram.custom.LeaderboardHologram;
 import com.maximde.hologramlib.hologram.custom.PagedLeaderboard;
-import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.TaskHandle;
 import lombok.Getter;
@@ -25,7 +24,6 @@ public class HologramManager {
     private final Map<String, InteractionBox> interactionBoxesById = new ConcurrentHashMap<>();
     private final Map<Integer, InteractionBox> interactionBoxesByEntityId = new ConcurrentHashMap<>();
 
-    private final PersistenceManager persistenceManager;
 
 
     public interface Events {
@@ -74,7 +72,7 @@ public class HologramManager {
 
     public InteractionBox spawn(InteractionBox interactionBox, Location location,
                                  boolean ignorePitchYaw) {
-
+        if(interactionBox == null) return interactionBox;
         register(interactionBox);
 
         BukkitTasks.runTask(() -> {
@@ -225,35 +223,35 @@ public class HologramManager {
     }
 
     public void spawn(LeaderboardHologram leaderboardHologram, Location location) {
-        spawn(leaderboardHologram, location, false, true);
+        spawn(leaderboardHologram, location, true);
     }
 
-    public void spawn(LeaderboardHologram leaderboardHologram, Location location, boolean persistant, boolean ignorePitchYaw) {
-        leaderboardHologram.teleport(location);
+    public void spawn(LeaderboardHologram leaderboardHologram, Location location, boolean ignorePitchYaw) {
+        leaderboardHologram.spawn(location, ignorePitchYaw);
         for (TextHologram textHologram : leaderboardHologram.getAllTextHolograms()) {
-            spawn(textHologram, textHologram.getLocation(), persistant, ignorePitchYaw);
+            register(textHologram);
         }
-
         if (leaderboardHologram.getFirstPlaceHead() != null) {
-            spawn(leaderboardHologram.getFirstPlaceHead(), leaderboardHologram.getFirstPlaceHead().getLocation(), persistant, ignorePitchYaw);
+            register(leaderboardHologram.getFirstPlaceHead());
         }
     }
 
     public <H extends Hologram<H>> H spawn(H hologram, Location location) {
         this.register(hologram);
-        BukkitTasks.runTask(() -> hologram.getInternalAccess().spawn(location, true).update());
+        BukkitTasks.runTask(() -> {
+            hologram.getInternalAccess().spawn(location, true).update();
+            spawn(hologram.getInteractionBox(), location);
+        });
 
         return hologram;
     }
 
-    public <H extends Hologram<H>> H spawn(H hologram, Location location, boolean persistent, boolean ignorePitchYaw) {
+    public <H extends Hologram<H>> H spawn(H hologram, Location location,  boolean ignorePitchYaw) {
         this.register(hologram);
         BukkitTasks.runTask(() -> {
             try {
                 hologram.getInternalAccess().spawn(location, ignorePitchYaw).update();
-                if (persistent && persistenceManager != null) {
-                    persistenceManager.saveHologram(hologram);
-                }
+                spawn(hologram.getInteractionBox(), location, ignorePitchYaw);
             } catch (Exception e) {
                 Bukkit.getLogger().warning("An error occurred while trying to spawn hologram with id: " + hologram.id);
                 e.printStackTrace();
@@ -280,80 +278,48 @@ public class HologramManager {
         return true;
     }
 
-    public boolean remove(Hologram<?> hologram, boolean removePersistence) {
-        return hologram != null && remove(hologram.getId(), removePersistence);
+    public boolean remove(Hologram<?> hologram) {
+        return hologram != null && remove(hologram.getId());
     }
 
-    public boolean remove(String id, boolean removePersistence) {
+    public boolean remove(String id) {
         Hologram<?> hologram = hologramsMap.remove(id);
         if (hologram != null) {
             entityIdToHologramMap.remove(hologram.getEntityID());
             if (hologram instanceof TextHologram textHologram) cancelAnimation(textHologram);
             hologram.getInternalAccess().kill();
-
-            if (persistenceManager != null) {
-                if (removePersistence && persistenceManager.getPersistentHolograms().contains(id)) {
-                    persistenceManager.removeHologram(id);
-                } else if (persistenceManager.getPersistentHolograms().contains(id)) {
-                    persistenceManager.saveHologram(hologram);
-                }
-            }
+            removeInteractionBox(hologram.getInteractionBox());
 
             return true;
         }
         return false;
     }
 
-    public boolean remove(Hologram<?> hologram) {
-        return remove(hologram, false);
-    }
-
-    public boolean remove(String id) {
-        return remove(id, false);
-    }
-
-    public void removeAll(boolean removePersistence) {
+    public void removeAll() {
         hologramsMap.values().forEach(hologram -> {
             if (hologram instanceof TextHologram textHologram) cancelAnimation(textHologram);
             hologram.getInternalAccess().kill();
-
-            if (!removePersistence && persistenceManager != null &&
-                persistenceManager.getPersistentHolograms().contains(hologram.getId())) {
-                persistenceManager.saveHologram(hologram);
-            }
         });
 
-        if (removePersistence && persistenceManager != null) {
-            for (String id : new ArrayList<>(persistenceManager.getPersistentHolograms())) {
-                persistenceManager.removeHologram(id);
-            }
-        }
 
         hologramsMap.clear();
         entityIdToHologramMap.clear();
     }
 
-    public void removeAll() {
-        removeAll(false);
-    }
-
-    public boolean remove(LeaderboardHologram leaderboardHologram, boolean removePersistence) {
+    public boolean remove(LeaderboardHologram leaderboardHologram) {
         boolean success = true;
 
         for (TextHologram textHologram : leaderboardHologram.getAllTextHolograms()) {
-            success &= remove(textHologram, removePersistence);
+            success &= remove(textHologram);
         }
 
         if (leaderboardHologram.getFirstPlaceHead() != null) {
-            success &= remove(leaderboardHologram.getFirstPlaceHead(), removePersistence);
+            success &= remove(leaderboardHologram.getFirstPlaceHead());
         }
 
         return success;
     }
 
-    public boolean remove(LeaderboardHologram leaderboardHologram) {
-        return remove(leaderboardHologram, false);
-    }
 
     public void applyAnimation(TextHologram hologram, TextAnimation textAnimation) {
         cancelAnimation(hologram);
@@ -391,7 +357,7 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source, String id, boolean persistent) {
-        return this.spawn(source.copy(id), source.getLocation(), persistent, false);
+        return this.spawn(source.copy(id), source.getLocation(), false);
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source) {
@@ -399,35 +365,9 @@ public class HologramManager {
     }
 
     public <H extends Hologram<H>> Hologram<H> copyHologram(H source, boolean persistent) {
-        return this.spawn(source.copy(), source.getLocation(), persistent, false);
+        return this.spawn(source.copy(), source.getLocation(), false);
     }
 
-    /**
-     * Makes an existing hologram persistent so it will be saved and loaded on server restart.
-     *
-     * @param id The ID of the hologram to make persistent
-     * @return true if the hologram was found and made persistent, false otherwise
-     */
-    public boolean makePersistent(String id) {
-        if (persistenceManager != null && hologramsMap.containsKey(id)) {
-            persistenceManager.saveHologram(hologramsMap.get(id));
-            return true;
-        }
-        return false;
-    }
 
-    /**
-     * Removes persistence from a hologram so it will no longer be saved.
-     * The hologram will remain active until the server restarts.
-     *
-     * @param id The ID of the hologram to remove persistence from
-     * @return true if the hologram was found and persistence was removed, false otherwise
-     */
-    public boolean removePersistence(String id) {
-        if (persistenceManager != null && persistenceManager.getPersistentHolograms().contains(id)) {
-            persistenceManager.removeHologram(id);
-            return true;
-        }
-        return false;
-    }
+
 }

@@ -59,6 +59,16 @@ public class BlockHologram extends Hologram<BlockHologram> {
         return meta;
     }
 
+    @Override
+    int getHeight() {
+        return (int) this.scale.y;
+    }
+
+    @Override
+    int getWidth() {
+        return (int) Math.max(this.scale.x, this.scale.z);
+    }
+
 
     protected BlockHologram copy() {
         int randomNumber = ThreadLocalRandom.current().nextInt(100000);

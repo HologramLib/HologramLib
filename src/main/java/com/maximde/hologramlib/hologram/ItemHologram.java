@@ -158,6 +158,32 @@ public class ItemHologram extends Hologram<ItemHologram> {
         }
     }
 
+    @Override
+    int getHeight() {
+        float baseSize = 0.5f;
+        switch (this.displayType) {
+            case GROUND -> baseSize = 0.25f;
+            case GUI -> baseSize = 0.5f;
+            case HEAD -> baseSize = 0.5f;
+            case FIXED -> baseSize = 0.5f;
+            default -> baseSize = 0.5f;
+        }
+        return Math.max(1, (int) Math.ceil(baseSize * this.scale.y));
+    }
+
+    @Override
+    int getWidth() {
+        float baseSize = 0.5f;
+        switch (this.displayType) {
+            case GROUND -> baseSize = 0.25f;
+            case GUI -> baseSize = 0.5f;
+            case HEAD -> baseSize = 0.5f;
+            case FIXED -> baseSize = 0.5f;
+            default -> baseSize = 0.5f;
+        }
+        return Math.max(1, (int) Math.ceil(baseSize * Math.max(this.scale.x, this.scale.z)));
+    }
+
     /**
      * Sets the item to a player head using a HeadDatabase head ID.
      * Requires HeadDatabase plugin to be installed and enabled.

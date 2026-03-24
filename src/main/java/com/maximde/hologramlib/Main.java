@@ -21,6 +21,6 @@ public class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         HologramLib.onDisable();
-        Optional.ofNullable(PacketEvents.getAPI()).ifPresent(PacketEventsAPI::terminate);
+        Optional.of(PacketEvents.getAPI()).ifPresent(PacketEventsAPI::terminate);
     }
 }

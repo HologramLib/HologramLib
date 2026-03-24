@@ -7,12 +7,12 @@ import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.maximde.hologramlib.bstats.Metrics;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.PassengerManager;
+import com.maximde.hologramlib.hook.BedrockPlayerHeadFilter;
 import com.maximde.hologramlib.hook.HeadDatabaseHook;
 import com.maximde.hologramlib.hook.PlaceholderAPIHook;
 import com.maximde.hologramlib.listener.InteractionPacketListener;
 import com.maximde.hologramlib.listener.PlayerJoinListener;
 import com.maximde.hologramlib.listener.PlayerQuitListener;
-import com.maximde.hologramlib.persistence.PersistenceManager;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.ItemsAdderHolder;
 import com.maximde.hologramlib.utils.PlayerUtils;
@@ -51,8 +51,6 @@ public abstract class HologramLib {
     private static boolean initialized = false;
     private static boolean loading = false;
 
-    @Getter
-    private static PersistenceManager persistenceManager;
 
     public static Optional<HologramManager> getManager() {
         init();
@@ -126,15 +124,13 @@ public abstract class HologramLib {
             BukkitTasks.setPlugin(plugin);
             BukkitTasks.setFoliaLib(foliaLib);
 
-            persistenceManager = new PersistenceManager();
-            hologramManager = new HologramManager(persistenceManager);
+            hologramManager = new HologramManager();
             PacketEvents.getAPI().getEventManager().registerListener(new InteractionPacketListener(hologramManager),
                     PacketListenerPriority.LOW);
 
             plugin.getServer().getPluginManager().registerEvents(new PlayerJoinListener(hologramManager), plugin);
             plugin.getServer().getPluginManager().registerEvents(new PlayerQuitListener(hologramManager), plugin);
 
-            persistenceManager.loadHolograms();
 
             PluginManager pluginManager = Bukkit.getPluginManager();
 
@@ -145,6 +141,9 @@ public abstract class HologramLib {
             } else {
                 plugin.getLogger().log(Level.INFO, "PlaceholderAPI not found or not enabled. PlaceholderAPI support will be disabled.");
             }
+
+            plugin.getLogger().log(Level.INFO, "Initializing Bedrock player head filter...");
+            new BedrockPlayerHeadFilter(PacketEvents.getAPI());
 
             Plugin headDatabasePlugin = pluginManager.getPlugin("HeadDatabase");
             if (headDatabasePlugin != null && headDatabasePlugin.isEnabled()) {
@@ -169,7 +168,6 @@ public abstract class HologramLib {
 
     public static void onDisable() {
         try {
-            savePersistentHolograms();
             hologramManager.removeAll();
             hologramManager.removeAllInteractionBoxes();
         } catch (Exception e) {
@@ -177,14 +175,6 @@ public abstract class HologramLib {
         }
     }
 
-    public static void savePersistentHolograms() {
-        if (persistenceManager != null && hologramManager != null) {
-            for (String id : persistenceManager.getPersistentHolograms()) {
-                hologramManager.getHologram(id).ifPresent(persistenceManager::saveHologram);
-            }
-            Bukkit.getLogger().log(Level.INFO, "Persistent holograms saved successfully.");
-        }
-    }
 
     public static Level toJavaUtilLevel(Logger.LogLevel logLevel) {
         return switch (logLevel) {

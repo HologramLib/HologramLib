@@ -110,12 +110,15 @@ manager.spawn(hologram);
 ---
 
 ## Roadmap
-**2025**  
-- Particle-effect holograms
-- ~~Interactive holograms~~
+**2026**
+- Switch from resourcepack to playerhead components
+- Switch back to single text holograms for leaderboards - dont split lines
+- More options for leaderboard holograms
+- Interactive holograms
 - Improved animation system
-- ~~Persistant holograms~~
-- ~~PlaceholderAPI~~
+- Persistant holograms
+- - Particle-effect holograms
+
 
 > [!WARNING]
 > Persistant holograms & the addon system are still experimental features
