@@ -2,6 +2,7 @@ package com.maximde.hologramlib.hologram;
 
 import com.maximde.hologramlib.hologram.custom.LeaderboardHologram;
 import com.maximde.hologramlib.hologram.custom.PagedLeaderboard;
+import com.maximde.hologramlib.hologram.custom.SwitchableLeaderboard;
 import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.TaskHandle;
 import lombok.Getter;
@@ -368,6 +369,83 @@ public class HologramManager {
         return this.spawn(source.copy(), source.getLocation(), false);
     }
 
+    /**
+     * Spawns a SwitchableLeaderboard at the specified location
+     * This method should be added to HologramManager
+     *
+     * @param switchableLeaderboard The switchable leaderboard to spawn
+     * @param location The location to spawn at
+     * @return The spawned SwitchableLeaderboard
+     */
+    public SwitchableLeaderboard spawn(HologramManager manager, SwitchableLeaderboard switchableLeaderboard, Location location) {
 
+        manager.registerEventHandler(switchableLeaderboard);
+
+        for (SwitchableLeaderboard.StatMode statMode : switchableLeaderboard.getStatModes().values()) {
+            for (LeaderboardHologram page : statMode.getPages()) {
+                page.setFixedRotation();
+                manager.spawn(page, location);
+            }
+        }
+
+        manager.spawn(switchableLeaderboard.getLeftArrow(), location);
+        manager.spawn(switchableLeaderboard.getRightArrow(), location);
+        manager.spawn(switchableLeaderboard.getLeftInteraction(), location);
+        manager.spawn(switchableLeaderboard.getRightInteraction(), location);
+
+        for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
+            manager.spawn(button.getHologram(), location);
+            manager.spawn(button.getInteraction(), location);
+        }
+
+        BukkitTasks.runTask(() -> {
+            try {
+                switchableLeaderboard.init(location);
+            } catch (Exception e) {
+                manager.removeEventHandler(switchableLeaderboard);
+                Bukkit.getLogger().warning("Error spawning SwitchableLeaderboard with id: " + switchableLeaderboard.getBaseId());
+                e.printStackTrace();
+            }
+        });
+
+        return switchableLeaderboard;
+    }
+
+    /**
+     * Removes a SwitchableLeaderboard and all its components
+     * This method should be added to HologramManager
+     *
+     * @param manager The HologramManager instance
+     * @param switchableLeaderboard The switchable leaderboard to remove
+     * @return true if successfully removed, false otherwise
+     */
+    public boolean remove(HologramManager manager, SwitchableLeaderboard switchableLeaderboard) {
+        if (switchableLeaderboard == null || !switchableLeaderboard.isSpawned()) {
+            return false;
+        }
+
+        manager.removeEventHandler(switchableLeaderboard);
+
+        boolean success = true;
+
+        for (SwitchableLeaderboard.StatMode statMode : switchableLeaderboard.getStatModes().values()) {
+            for (LeaderboardHologram page : statMode.getPages()) {
+                success &= manager.remove(page);
+            }
+        }
+
+        success &= manager.remove(switchableLeaderboard.getLeftArrow());
+        success &= manager.remove(switchableLeaderboard.getRightArrow());
+        success &= manager.removeInteractionBox(switchableLeaderboard.getLeftInteraction());
+        success &= manager.removeInteractionBox(switchableLeaderboard.getRightInteraction());
+
+
+        for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
+            success &= manager.remove(button.getHologram());
+            success &= manager.removeInteractionBox(button.getInteraction());
+        }
+
+        return success;
+    }
 
 }

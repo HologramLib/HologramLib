@@ -1,7 +1,7 @@
 project.version = "1.8.2"
 
 group = "com.github.max1mde"
-version = "1.8.5"
+version = "1.8.5.1"
 
 plugins {
     kotlin("jvm") version "2.0.21"
