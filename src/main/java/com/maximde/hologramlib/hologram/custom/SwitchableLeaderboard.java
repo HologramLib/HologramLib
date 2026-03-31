@@ -515,7 +515,7 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         }
 
         int oldPage = state.getCurrentPage();
-        if (oldPage >= 0 && oldPage < currentMode.getPageCount()) {
+        if (oldPage >= 0 && oldPage < currentMode.getPageCount() && oldPage != pageIndex) {
             currentMode.getPages().get(oldPage).hide(player);
         }
 
@@ -569,15 +569,22 @@ public class SwitchableLeaderboard implements HologramManager.Events {
 
         if (currentMode == null) return;
 
+        LeaderboardHologram targetPage = null;
+        int currentPage = state.getCurrentPage();
+        if (currentPage >= 0 && currentPage < currentMode.getPageCount()) {
+            targetPage = currentMode.getPages().get(currentPage);
+        }
+
         for (StatMode statMode : statModes.values()) {
             for (LeaderboardHologram page : statMode.getPages()) {
-                page.hide(player);
+                if (page != targetPage) {
+                    page.hide(player);
+                }
             }
         }
 
-        int currentPage = state.getCurrentPage();
-        if (currentPage >= 0 && currentPage < currentMode.getPageCount()) {
-            currentMode.getPages().get(currentPage).show(player);
+        if (targetPage != null) {
+            targetPage.show(player);
         }
     }
 

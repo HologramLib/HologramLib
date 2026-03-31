@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 @SuppressWarnings({"unused", "UnusedReturnValue", "deprecation", "DeprecatedIsStillUsed"})
@@ -46,7 +47,7 @@ public abstract class Hologram<T extends Hologram<T>> {
      * Players which will not be automatically added as viewers no matter which render mode
      */
     @Getter
-    private final List<Player> blacklistedViewers = new ArrayList<>();
+    private final Set<Player> blacklistedViewers = ConcurrentHashMap.newKeySet();
 
     @Getter
     protected boolean dead = true;
