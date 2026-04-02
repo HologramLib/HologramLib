@@ -36,14 +36,14 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.10.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.arcaniax:HeadDatabase-API:1.3.2")
 
     implementation("com.github.maximjsx.EntityLib:spigot:1.0.0")
-    implementation("net.kyori:adventure-text-minimessage:4.17.0")
+    implementation("net.kyori:adventure-text-minimessage:4.26.1")
     implementation("com.tcoded:FoliaLib:0.5.1")
 
     implementation("com.github.HologramLib:AddonLib:1.1.0")
