@@ -159,7 +159,7 @@ public class LeaderboardHologram {
                 Map.Entry<UUID, PlayerScore> entry = sorted.get(i);
                 UUID uuid = entry.getKey();
                 PlayerScore playerScore = entry.getValue();
-                int place = i + 1;
+                int place = i + 1 + options.placeOffset();
 
                 FormattedEntry formatted = formatEntryForDottedLayout(place, uuid, playerScore);
                 formattedEntries.add(formatted);
@@ -180,7 +180,7 @@ public class LeaderboardHologram {
                 Map.Entry<UUID, PlayerScore> entry = sorted.get(i);
                 UUID uuid = entry.getKey();
                 PlayerScore playerScore = entry.getValue();
-                int place = i + 1;
+                int place = i + 1 + options.placeOffset();
                 content = getFormattedEntry(place, uuid, playerScore);
             }
 
@@ -193,7 +193,7 @@ public class LeaderboardHologram {
 
         if (options.showEmptyPlaces()) {
             for (int i = displayCount; i < maxEntries; i++) {
-                text.append("\n").append(getEmptyPlaceFormat(i + 1));
+                text.append("\n").append(getEmptyPlaceFormat(i + 1 + options.placeOffset()));
             }
         }
 
@@ -203,7 +203,7 @@ public class LeaderboardHologram {
     }
 
     private String getFormattedEntry(int place, UUID uuid, PlayerScore playerScore) {
-        String placeFormat = (place <= 3 && place <= options.placeFormats().length)
+        String placeFormat = (place > 0 && place <= options.placeFormats().length)
                 ? options.placeFormats()[place - 1]
                 : options.defaultPlaceFormat();
 
@@ -653,6 +653,9 @@ public class LeaderboardHologram {
 
         @Builder.Default
         private String title = "Leaderboard";
+
+        @Builder.Default
+        private int placeOffset = 0;
 
         /**
          * Format strings for top 3 places.
