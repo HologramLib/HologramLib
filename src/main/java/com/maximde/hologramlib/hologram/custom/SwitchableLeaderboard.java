@@ -3,6 +3,7 @@ package com.maximde.hologramlib.hologram.custom;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.InteractionBox;
 import com.maximde.hologramlib.hologram.TextHologram;
+import com.maximde.hologramlib.utils.BukkitTasks;
 import com.maximde.hologramlib.utils.Vector3F;
 import lombok.Getter;
 import lombok.Setter;
@@ -156,6 +157,10 @@ public class SwitchableLeaderboard implements HologramManager.Events {
 
         private TextHologram hologram;
         private InteractionBox interaction;
+
+        private List<TextHologram> stateHolograms = new ArrayList<>();
+        List<TextHologram> getStateHolograms() { return stateHolograms; }
+        void setStateHolograms(List<TextHologram> stateHolograms) { this.stateHolograms = stateHolograms; }
 
         /**
          * Callback when button state changes
@@ -337,19 +342,26 @@ public class SwitchableLeaderboard implements HologramManager.Events {
             throw new IllegalArgumentException("Button with ID " + button.getId() + " already exists");
         }
 
-        String hologramId = baseId + "_button_" + button.getId();
-        TextHologram hologram = new TextHologram(hologramId);
-        hologram.setMiniMessageText(button.getState(0).getDisplayText())
-                .setScale(button.getScale().x, button.getScale().y, button.getScale().z)
-                .setBackgroundColor(button.getBackgroundColor())
-                .setBillboard(button.getBillboard());
+        String baseHologramId = baseId + "_button_" + button.getId();
+        List<TextHologram> stateHolos = new ArrayList<>();
 
-        InteractionBox interaction = new InteractionBox(hologramId + "_interact",
+        for (int i = 0; i < button.getStateCount(); i++) {
+            TextHologram hologram = new TextHologram(baseHologramId + "_" + i);
+            hologram.setMiniMessageText(button.getState(i).getDisplayText())
+                    .setScale(button.getScale().x, button.getScale().y, button.getScale().z)
+                    .setBackgroundColor(button.getBackgroundColor())
+                    .setBillboard(button.getBillboard());
+            stateHolos.add(hologram);
+        }
+
+        button.setHologram(stateHolos.get(0));
+        button.setStateHolograms(stateHolos);
+
+        InteractionBox interaction = new InteractionBox(baseHologramId + "_interact",
                 player -> handleButtonClick(player, button));
         interaction.setSize(button.getScale().x * 0.5f, button.getScale().y * 0.5f)
                 .setResponsive(true);
 
-        button.setHologram(hologram);
         button.setInteraction(interaction);
 
         stateButtons.add(button);
@@ -397,8 +409,21 @@ public class SwitchableLeaderboard implements HologramManager.Events {
                     button.getRelativePosition().y,
                     button.getRelativePosition().z
             );
-            button.getHologram().teleport(buttonLoc).update();
+            for (TextHologram holo : button.getStateHolograms()) {
+                holo.teleport(buttonLoc).update();
+            }
             button.getInteraction().teleport(buttonLoc);
+
+            BukkitTasks.runTask(() -> {
+                for (TextHologram holo : button.getStateHolograms()) {
+                    if (holo.isDead()) {
+                        holo.getInternalAccess().spawn(buttonLoc, false);
+                    }
+                }
+                for (Player p : org.bukkit.Bukkit.getOnlinePlayers()) {
+                    refreshPlayerView(p);
+                }
+            });
         }
 
         showInitialState();
@@ -413,19 +438,10 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         String firstStatModeId = statModes.keySet().iterator().next();
 
         for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
-            for (StatMode statMode : statModes.values()) {
-                for (LeaderboardHologram page : statMode.getPages()) {
-                    page.hide(player);
-                }
-            }
-
             PlayerState state = new PlayerState(firstStatModeId);
             playerStates.put(player.getUniqueId(), state);
 
-            StatMode firstMode = statModes.get(firstStatModeId);
-            if (!firstMode.getPages().isEmpty()) {
-                firstMode.getPages().get(0).show(player);
-            }
+            refreshPlayerView(player);
         }
     }
 
@@ -448,9 +464,6 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         int nextStateIndex = (currentStateIndex + 1) % button.getStateCount();
 
         state.setButtonState(button.getId(), nextStateIndex);
-
-        ButtonState newState = button.getState(nextStateIndex);
-        button.getHologram().setMiniMessageText(newState.getDisplayText()).update();
 
         player.playSound(player.getLocation(), stateChangeSound, stateChangeVolume, stateChangePitch);
 
@@ -515,7 +528,7 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         }
 
         int oldPage = state.getCurrentPage();
-        if (oldPage >= 0 && oldPage < currentMode.getPageCount()) {
+        if (oldPage >= 0 && oldPage < currentMode.getPageCount() && oldPage != pageIndex) {
             currentMode.getPages().get(oldPage).hide(player);
         }
 
@@ -565,19 +578,39 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         if (!spawned) return;
 
         PlayerState state = getOrCreatePlayerState(player);
+
+        for (StateButton button : stateButtons) {
+            int currentBtnState = state.getButtonState(button.getId());
+            List<TextHologram> holos = button.getStateHolograms();
+            for (int i = 0; i < holos.size(); i++) {
+                if (i == currentBtnState) {
+                    holos.get(i).show(player);
+                } else {
+                    holos.get(i).hide(player);
+                }
+            }
+        }
+
         StatMode currentMode = statModes.get(state.getCurrentStatMode());
 
         if (currentMode == null) return;
 
+        LeaderboardHologram targetPage = null;
+        int currentPage = state.getCurrentPage();
+        if (currentPage >= 0 && currentPage < currentMode.getPageCount()) {
+            targetPage = currentMode.getPages().get(currentPage);
+        }
+
         for (StatMode statMode : statModes.values()) {
             for (LeaderboardHologram page : statMode.getPages()) {
-                page.hide(player);
+                if (page != targetPage) {
+                    page.hide(player);
+                }
             }
         }
 
-        int currentPage = state.getCurrentPage();
-        if (currentPage >= 0 && currentPage < currentMode.getPageCount()) {
-            currentMode.getPages().get(currentPage).show(player);
+        if (targetPage != null) {
+            targetPage.show(player);
         }
     }
 
@@ -606,7 +639,6 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         }
 
         for (StateButton button : stateButtons) {
-            button.getHologram().show(player);
             button.getInteraction().show(player);
         }
 
@@ -627,7 +659,9 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         }
 
         for (StateButton button : stateButtons) {
-            button.getHologram().hide(player);
+            for (TextHologram holo : button.getStateHolograms()) {
+                holo.hide(player);
+            }
             button.getInteraction().hide(player);
         }
 
@@ -676,6 +710,14 @@ public class SwitchableLeaderboard implements HologramManager.Events {
             rightArrow.setRotation(x, 0).update();
         }
 
+        for (StateButton button : stateButtons) {
+            if (button.getStateHolograms() != null) {
+                for (TextHologram holo : button.getStateHolograms()) {
+                    holo.setRotation(x, 0).update();
+                }
+            }
+        }
+
         return this;
     }
 
@@ -716,7 +758,9 @@ public class SwitchableLeaderboard implements HologramManager.Events {
                     button.getRelativePosition().y,
                     button.getRelativePosition().z
             );
-            button.getHologram().teleport(buttonLoc).update();
+            for (TextHologram holo : button.getStateHolograms()) {
+                holo.teleport(buttonLoc).update();
+            }
             button.getInteraction().teleport(buttonLoc);
         }
 
@@ -866,7 +910,11 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         }
 
         for (StateButton button : stateButtons) {
-            holograms.add(button.getHologram());
+            if (button.getStateHolograms() != null && !button.getStateHolograms().isEmpty()) {
+                holograms.addAll(button.getStateHolograms());
+            } else {
+                holograms.add(button.getHologram());
+            }
         }
 
         return holograms;
