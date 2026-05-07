@@ -151,10 +151,10 @@ public abstract class HologramLib {
                 HeadDatabaseHook.init();
             }
 
-            AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());
+            /*AddonLib addonLib = new AddonLib((logLevel, message) -> Bukkit.getLogger().log(toJavaUtilLevel(logLevel), message), plugin.getDataFolder(), plugin.getDescription().getVersion());
             addonLib.setEnabledAddons(new String[]{})
                     .init();
-            if(registerCommand) registerCommand(new HoloCommand(addonLib));
+            if(registerCommand) registerCommand(new HoloCommand(addonLib));*/
 
 
             initialized = true;
