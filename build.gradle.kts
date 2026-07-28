@@ -24,28 +24,28 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://repo.codemc.io/repository/maven-releases/")
-    maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven { url = uri("https://jitpack.io") }
     maven {
         name = "tcoded-releases"
         url = uri("https://repo.tcoded.com/releases")
     }
+    maven("https://maven.pvphub.me/tofaa")
 }
 
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:26.2-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.10.0")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.arcaniax:HeadDatabase-API:1.3.2")
 
-    implementation("com.github.maximjsx.EntityLib:spigot:1.0.0")
+    implementation("io.github.tofaa2:spigot:3.3.6-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.26.1")
     implementation("com.tcoded:FoliaLib:0.5.1")
-
     implementation("com.github.HologramLib:AddonLib:1.1.0")
 
     library(kotlin("stdlib"))

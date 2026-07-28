@@ -159,7 +159,7 @@ public class SwitchableLeaderboard implements HologramManager.Events {
         private InteractionBox interaction;
 
         private List<TextHologram> stateHolograms = new ArrayList<>();
-        List<TextHologram> getStateHolograms() { return stateHolograms; }
+        public List<TextHologram> getStateHolograms() { return stateHolograms; }
         void setStateHolograms(List<TextHologram> stateHolograms) { this.stateHolograms = stateHolograms; }
 
         /**

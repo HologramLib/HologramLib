@@ -188,6 +188,36 @@ public class HologramManager {
         return success;
     }
 
+    public boolean remove(SwitchableLeaderboard switchableLeaderboard) {
+        if (switchableLeaderboard == null || !switchableLeaderboard.isSpawned()) {
+            return false;
+        }
+
+        removeEventHandler(switchableLeaderboard);
+
+        boolean success = true;
+
+        for (SwitchableLeaderboard.StatMode statMode : switchableLeaderboard.getStatModes().values()) {
+            for (LeaderboardHologram page : statMode.getPages()) {
+                success &= remove(page);
+            }
+        }
+
+        success &= remove(switchableLeaderboard.getLeftArrow());
+        success &= remove(switchableLeaderboard.getRightArrow());
+        success &= removeInteractionBox(switchableLeaderboard.getLeftInteraction());
+        success &= removeInteractionBox(switchableLeaderboard.getRightInteraction());
+
+        for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
+            for (TextHologram holo : button.getStateHolograms()) {
+                success &= remove(holo);
+            }
+            success &= removeInteractionBox(button.getInteraction());
+        }
+
+        return success;
+    }
+
 
     @Deprecated
     public Map<String, Hologram<?>> getHologramsMap() {
@@ -394,7 +424,9 @@ public class HologramManager {
         manager.spawn(switchableLeaderboard.getRightInteraction(), location);
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            manager.spawn(button.getHologram(), location);
+            for (TextHologram stateHolo : button.getStateHolograms()) {
+                manager.spawn(stateHolo, location);
+            }
             manager.spawn(button.getInteraction(), location);
         }
 
