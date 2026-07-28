@@ -424,7 +424,9 @@ public class HologramManager {
         manager.spawn(switchableLeaderboard.getRightInteraction(), location);
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            manager.spawn(button.getHologram(), location);
+            for (TextHologram stateHolo : button.getStateHolograms()) {
+                manager.spawn(stateHolo, location);
+            }
             manager.spawn(button.getInteraction(), location);
         }
 
