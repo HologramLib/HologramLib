@@ -139,15 +139,20 @@ public class HologramManager {
         registerEventHandler(pagedLeaderboard);
 
         for (LeaderboardHologram page : pagedLeaderboard.getPages()) {
-            page.setFixedRotation();
+            if (!pagedLeaderboard.isDynamicRotation()) {
+                page.setFixedRotation();
+            }
             spawn(page, location);
         }
 
-        spawn(pagedLeaderboard.getLeftArrow(), location);
-        spawn(pagedLeaderboard.getRightArrow(), location);
-
-        spawn(pagedLeaderboard.getLeftInteraction(), location);
-        spawn(pagedLeaderboard.getRightInteraction(), location);
+        if (pagedLeaderboard.isShowArrows()) {
+            if (!pagedLeaderboard.isSingleDirectionCycling()) {
+                spawn(pagedLeaderboard.getLeftArrow(), location);
+                spawn(pagedLeaderboard.getLeftInteraction(), location);
+            }
+            spawn(pagedLeaderboard.getRightArrow(), location);
+            spawn(pagedLeaderboard.getRightInteraction(), location);
+        }
 
         BukkitTasks.runTask(() -> {
             try {
@@ -179,11 +184,14 @@ public class HologramManager {
             success &= remove(page);
         }
 
-        success &= remove(pagedLeaderboard.getLeftArrow());
-        success &= remove(pagedLeaderboard.getRightArrow());
-
-        success &= removeInteractionBox(pagedLeaderboard.getLeftInteraction());
-        success &= removeInteractionBox(pagedLeaderboard.getRightInteraction());
+        if (pagedLeaderboard.isShowArrows()) {
+            if (!pagedLeaderboard.isSingleDirectionCycling()) {
+                success &= remove(pagedLeaderboard.getLeftArrow());
+                success &= removeInteractionBox(pagedLeaderboard.getLeftInteraction());
+            }
+            success &= remove(pagedLeaderboard.getRightArrow());
+            success &= removeInteractionBox(pagedLeaderboard.getRightInteraction());
+        }
 
         return success;
     }
@@ -394,7 +402,10 @@ public class HologramManager {
         manager.spawn(switchableLeaderboard.getRightInteraction(), location);
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            manager.spawn(button.getHologram(), location);
+            // Register every state hologram, otherwise the unregistered ones survive remove() and stack up on respawn
+            for (TextHologram stateHologram : button.getStateHolograms()) {
+                manager.spawn(stateHologram, location);
+            }
             manager.spawn(button.getInteraction(), location);
         }
 
@@ -441,7 +452,9 @@ public class HologramManager {
 
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            success &= manager.remove(button.getHologram());
+            for (TextHologram stateHologram : button.getStateHolograms()) {
+                success &= manager.remove(stateHologram);
+            }
             success &= manager.removeInteractionBox(button.getInteraction());
         }
 

@@ -159,7 +159,7 @@ public abstract class HologramLib {
 
             initialized = true;
             plugin.getLogger().log(Level.INFO, "Successfully initialized!");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to enable HologramLib", e);
         } finally {
             loading = false;
@@ -168,8 +168,10 @@ public abstract class HologramLib {
 
     public static void onDisable() {
         try {
-            hologramManager.removeAll();
-            hologramManager.removeAllInteractionBoxes();
+            if (hologramManager != null) {
+                hologramManager.removeAll();
+                hologramManager.removeAllInteractionBoxes();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
