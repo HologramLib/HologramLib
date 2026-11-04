@@ -402,7 +402,10 @@ public class HologramManager {
         manager.spawn(switchableLeaderboard.getRightInteraction(), location);
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            manager.spawn(button.getHologram(), location);
+            // Register every state hologram, otherwise the unregistered ones survive remove() and stack up on respawn
+            for (TextHologram stateHologram : button.getStateHolograms()) {
+                manager.spawn(stateHologram, location);
+            }
             manager.spawn(button.getInteraction(), location);
         }
 
@@ -449,7 +452,9 @@ public class HologramManager {
 
 
         for (SwitchableLeaderboard.StateButton button : switchableLeaderboard.getStateButtons()) {
-            success &= manager.remove(button.getHologram());
+            for (TextHologram stateHologram : button.getStateHolograms()) {
+                success &= manager.remove(stateHologram);
+            }
             success &= manager.removeInteractionBox(button.getInteraction());
         }
 
